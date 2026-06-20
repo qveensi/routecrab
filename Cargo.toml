@@ -28,7 +28,7 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 kube = { version = "3", features = ["runtime", "client", "derive"] }
 k8s-openapi = { version = "0.27", features = ["latest"] }
 gateway-api = "0.21.0"
-axum-prometheus = "0.7.0"
+axum-prometheus = "0.10.0"
 metrics = "0.23"
 askama = "0.14.0"
 tokio-stream = { version = "0.1", features = ["sync"] }
