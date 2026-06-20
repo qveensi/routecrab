@@ -1758,6 +1758,7 @@ dependencies = [
  "indexmap",
  "k8s-openapi",
  "kube",
+ "metrics",
  "reqwest",
  "rust-embed",
  "serde",
