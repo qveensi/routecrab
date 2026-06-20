@@ -1,0 +1,30 @@
+# Build artifacts — largest exclusion; avoids gigabytes of compiled objects
+target/
+
+# Version control
+.git/
+.github/
+
+# Project tooling / planning — not needed for the build
+.superpowers/
+.claude/
+
+# Documentation and deploy manifests — not referenced by cargo or build scripts
+docs/
+deploy/
+
+# Markdown files at repo root
+*.md
+
+# Editor / OS noise
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Test fixtures that aren't part of the library or binary
+tests/
+
+# Explicitly keep (no rule needed — listed here for clarity):
+#   Cargo.toml  Cargo.lock  src/  assets/  templates/
