@@ -20,32 +20,47 @@ pub fn init_tracing(level: &str, format: &str) {
     }
 }
 
+/// Counts of routes by health, EXCLUDING hidden routes (hidden = not surfaced
+/// anywhere: board, health, or metrics).
+pub(crate) struct RouteCounts {
+    pub total: u32,
+    pub healthy: u32,
+    pub degraded: u32,
+    pub unhealthy: u32,
+    pub unknown: u32,
+}
+
+pub(crate) fn count_routes(routes: &[Route]) -> RouteCounts {
+    let mut c = RouteCounts {
+        total: 0,
+        healthy: 0,
+        degraded: 0,
+        unhealthy: 0,
+        unknown: 0,
+    };
+    for r in routes.iter().filter(|r| !r.hidden) {
+        c.total += 1;
+        match r.health {
+            HealthStatus::Healthy => c.healthy += 1,
+            HealthStatus::Degraded => c.degraded += 1,
+            HealthStatus::Unhealthy => c.unhealthy += 1,
+            HealthStatus::Unknown => c.unknown += 1,
+        }
+    }
+    c
+}
+
 /// Update custom Prometheus gauges from the current snapshot of routes.
 ///
 /// Must be called after `web::router` has been built (which registers the
 /// global `metrics` recorder via `PrometheusMetricLayer::pair()`).
 pub fn update_route_gauges(routes: &[Route]) {
-    let total = routes.len() as f64;
-    metrics::gauge!("routecrab_routes_total").set(total);
-
-    let mut healthy = 0u32;
-    let mut degraded = 0u32;
-    let mut unhealthy = 0u32;
-    let mut unknown = 0u32;
-
-    for r in routes {
-        match r.health {
-            HealthStatus::Healthy => healthy += 1,
-            HealthStatus::Degraded => degraded += 1,
-            HealthStatus::Unhealthy => unhealthy += 1,
-            HealthStatus::Unknown => unknown += 1,
-        }
-    }
-
-    metrics::gauge!("routecrab_routes_by_health", "status" => "healthy").set(healthy as f64);
-    metrics::gauge!("routecrab_routes_by_health", "status" => "degraded").set(degraded as f64);
-    metrics::gauge!("routecrab_routes_by_health", "status" => "unhealthy").set(unhealthy as f64);
-    metrics::gauge!("routecrab_routes_by_health", "status" => "unknown").set(unknown as f64);
+    let c = count_routes(routes);
+    metrics::gauge!("routecrab_routes_total").set(c.total as f64);
+    metrics::gauge!("routecrab_routes_by_health", "status" => "healthy").set(c.healthy as f64);
+    metrics::gauge!("routecrab_routes_by_health", "status" => "degraded").set(c.degraded as f64);
+    metrics::gauge!("routecrab_routes_by_health", "status" => "unhealthy").set(c.unhealthy as f64);
+    metrics::gauge!("routecrab_routes_by_health", "status" => "unknown").set(c.unknown as f64);
 }
 
 #[cfg(test)]
@@ -63,5 +78,34 @@ mod tests {
     #[test]
     fn init_tracing_text_does_not_panic() {
         init_tracing("debug", "text");
+    }
+
+    #[test]
+    fn count_routes_excludes_hidden() {
+        use crate::model::{HealthStatus, Route};
+        let routes = vec![
+            Route {
+                url: "http://a".into(),
+                health: HealthStatus::Healthy,
+                ..Default::default()
+            },
+            Route {
+                url: "http://b".into(),
+                health: HealthStatus::Unhealthy,
+                hidden: true,
+                ..Default::default()
+            },
+            Route {
+                url: "http://c".into(),
+                health: HealthStatus::Degraded,
+                ..Default::default()
+            },
+        ];
+        let c = count_routes(&routes);
+        assert_eq!(c.total, 2);
+        assert_eq!(c.healthy, 1);
+        assert_eq!(c.unhealthy, 0);
+        assert_eq!(c.degraded, 1);
+        assert_eq!(c.unknown, 0);
     }
 }
