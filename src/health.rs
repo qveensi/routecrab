@@ -1,0 +1,110 @@
+use std::time::Duration;
+
+use crate::model::{HealthStatus, Route};
+
+/// Classify a probe result into a HealthStatus.
+///
+/// `degraded_after` choice in `run()`: we pass `cfg.health_timeout / 2`.
+/// A response that arrives but takes more than half the configured timeout is a
+/// warning sign (slow upstream) — flagged as Degraded rather than Healthy —
+/// giving an early warning before the service crosses the hard timeout boundary.
+pub fn classify(status: Option<u16>, elapsed: Duration, degraded_after: Duration) -> HealthStatus {
+    match status {
+        None => HealthStatus::Unhealthy,
+        Some(code) if code >= 400 => HealthStatus::Unhealthy,
+        Some(_) if elapsed > degraded_after => HealthStatus::Degraded,
+        Some(_) => HealthStatus::Healthy,
+    }
+}
+
+/// Return true if a route should be probed: must have a non-empty URL and
+/// must not have monitoring explicitly disabled.
+pub fn should_check(r: &Route) -> bool {
+    !r.url.is_empty() && !r.monitor_disabled
+}
+
+/// Run the health-check loop. Returns immediately when health checking is
+/// disabled in config. Otherwise ticks on `cfg.health_interval`, probing
+/// each eligible route with a HEAD request and storing the result.
+#[allow(dead_code)]
+pub async fn run(store: crate::store::Store, cfg: crate::config::Config) {
+    if !cfg.health_enabled {
+        return;
+    }
+
+    let client = reqwest::Client::builder()
+        .timeout(cfg.health_timeout)
+        .build()
+        .expect("failed to build reqwest client");
+
+    // Degraded threshold: half the probe timeout. A response slower than this
+    // is worth flagging but has not yet crossed the hard timeout boundary.
+    let degraded_after = cfg.health_timeout / 2;
+
+    let mut interval = tokio::time::interval(cfg.health_interval);
+    loop {
+        interval.tick().await;
+
+        let routes = store.list();
+        for route in routes {
+            if !should_check(&route) {
+                continue;
+            }
+
+            let start = tokio::time::Instant::now();
+            let status_code = client
+                .head(&route.url)
+                .send()
+                .await
+                .ok()
+                .map(|resp| resp.status().as_u16());
+            let elapsed = start.elapsed();
+
+            let health = classify(status_code, elapsed, degraded_after);
+            store.set_health(&route.id, health);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn classify_maps_codes() {
+        use std::time::Duration;
+        assert_eq!(
+            classify(Some(200), Duration::from_millis(10), Duration::from_secs(2)),
+            HealthStatus::Healthy
+        );
+        assert_eq!(
+            classify(Some(500), Duration::from_millis(10), Duration::from_secs(2)),
+            HealthStatus::Unhealthy
+        );
+        assert_eq!(
+            classify(Some(200), Duration::from_secs(5), Duration::from_secs(2)),
+            HealthStatus::Degraded
+        );
+        assert_eq!(
+            classify(None, Duration::from_millis(10), Duration::from_secs(2)),
+            HealthStatus::Unhealthy
+        );
+    }
+
+    #[test]
+    fn skips_empty_url_and_disabled() {
+        assert!(!should_check(&Route {
+            url: "".into(),
+            ..Default::default()
+        }));
+        assert!(!should_check(&Route {
+            url: "http://x".into(),
+            monitor_disabled: true,
+            ..Default::default()
+        }));
+        assert!(should_check(&Route {
+            url: "http://x".into(),
+            ..Default::default()
+        }));
+    }
+}
