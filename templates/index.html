@@ -32,7 +32,7 @@
     <button class="theme-toggle" onclick="toggleTheme()">Toggle theme</button>
   </header>
 
-  <main class="main" id="board" hx-ext="sse">
+  <main class="main" id="board" hx-ext="sse" sse-connect="/events">
     {% if groups.is_empty() %}
       <p class="empty">No routes found.</p>
     {% else %}

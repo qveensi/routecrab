@@ -1,5 +1,6 @@
 pub mod api;
 pub mod pages;
+pub mod sse;
 
 use axum::{routing::get, Router};
 use axum_prometheus::PrometheusMetricLayer;
@@ -26,6 +27,7 @@ pub fn router(store: Store, cfg: Config) -> Router {
             Router::new()
                 .route("/healthz", get(healthz))
                 .route("/api/routes", get(api::api_routes))
+                .route("/events", get(sse::sse_handler))
                 .route(
                     "/metrics",
                     get(move || async move { metric_handle.render() }),
@@ -137,6 +139,23 @@ mod tests {
         assert!(
             !body_str.contains("beta-service"),
             "beta should be filtered out"
+        );
+
+        // GET /events returns 200 text/event-stream
+        let res = app
+            .clone()
+            .oneshot(Request::get("/events").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200, "/events must be 200");
+        let ct = res
+            .headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("");
+        assert!(
+            ct.starts_with("text/event-stream"),
+            "/events must serve text/event-stream, got: {ct}"
         );
     }
 }
