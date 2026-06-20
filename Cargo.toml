@@ -16,7 +16,7 @@ path = "src/main.rs"
 
 [dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time"] }
-axum = "0.7"
+axum = "0.8"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 serde = { version = "1", features = ["derive"] }
@@ -28,9 +28,9 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 kube = { version = "3", features = ["runtime", "client", "derive"] }
 k8s-openapi = { version = "0.27", features = ["latest"] }
 gateway-api = "0.21.0"
-axum-prometheus = "0.7.0"
-metrics = "0.23"
-askama = "0.14.0"
+axum-prometheus = "0.10"
+metrics = "0.24"
+askama = "0.16"
 tokio-stream = { version = "0.1", features = ["sync"] }
 rust-embed = { version = "8.11.0", features = ["interpolate-folder-path", "include-exclude"] }
 async-stream = "0.3"

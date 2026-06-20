@@ -15,7 +15,7 @@ use crate::{config::Config, store::Store};
 /// - GET /           → HTML dashboard board
 /// - GET /healthz    → 200 "ok"
 /// - GET /api/routes → JSON list of all routes (sorted)
-/// - GET /assets/*   → static embedded assets (htmx, css)
+/// - GET /assets/{*path} → static embedded assets (htmx, css)
 pub fn router(
     store: Store,
     cfg: Config,
@@ -24,7 +24,7 @@ pub fn router(
     let page_state = pages::page_state(store.clone(), &cfg);
     Router::new()
         .route("/", get(pages::index))
-        .route("/assets/*path", get(pages::static_handler))
+        .route("/assets/{*path}", get(pages::static_handler))
         .with_state(page_state)
         .merge(
             Router::new()
