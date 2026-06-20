@@ -71,7 +71,7 @@ Attach `routecrab.io/*` annotations to any `HTTPRoute` to control how it appears
 | `routecrab.io/title` | string | — (falls back to resource name) | Display title on the card |
 | `routecrab.io/description` | string | — | Short description shown under the title |
 | `routecrab.io/group` | string | namespace name | Group heading to place the card under |
-| `routecrab.io/icon` | string | — | Simple Icons slug to display on the card |
+| `routecrab.io/icon` | string | — | Simple Icons slug; the matching SVG is embedded inline in the card |
 | `routecrab.io/url` | string | derived from first host + path | Clickable URL on the card |
 | `routecrab.io/order` | i32 | `0` | Sort order within a group (lower = earlier) |
 | `routecrab.io/hidden` | `"true"` | — | Set `"true"` to hide the route from the board |
@@ -95,7 +95,7 @@ routecrab is configured entirely through environment variables.
 | `ROUTECRAB_HEALTH_TIMEOUT` | `5s` | Per-request timeout for health checks |
 | `ROUTECRAB_NAMESPACE_ALLOWLIST` | _(empty = all)_ | Comma-separated namespace allowlist |
 | `ROUTECRAB_NAMESPACE_DENYLIST` | `kube-system,kube-public,kube-node-lease` | Comma-separated namespace denylist |
-| `ROUTECRAB_RESYNC_INTERVAL` | `1800s` | Full re-list interval for HTTPRoute discovery |
+| `ROUTECRAB_RESYNC_INTERVAL` | `1800s` | **Reserved (not yet honored).** Parsed but not wired to the watcher. |
 
 Full reference: [docs/configuration.md](docs/configuration.md).
 

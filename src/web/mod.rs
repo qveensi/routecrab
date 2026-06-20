@@ -1,4 +1,5 @@
 pub mod api;
+pub mod card;
 pub mod pages;
 pub mod sse;
 
@@ -156,6 +157,67 @@ mod tests {
         assert!(
             ct.starts_with("text/event-stream"),
             "/events must serve text/event-stream, got: {ct}"
+        );
+    }
+
+    /// Assert that upserting a route causes the broadcast channel to emit a Change::Upsert,
+    /// which the SSE handler renders into a fragment containing the OOB swap marker
+    /// and the route's element id.
+    #[tokio::test]
+    async fn sse_emits_card_fragment_on_upsert() {
+        use askama::Template;
+
+        use crate::{
+            store::{Change, Store},
+            web::card::CardTemplate,
+        };
+
+        let store = Store::new();
+        let mut rx = store.subscribe();
+
+        store.upsert(crate::model::Route {
+            id: "sse-frag-test".into(),
+            name: "grafana".into(),
+            ..Default::default()
+        });
+
+        // Receive the broadcast change emitted by the upsert.
+        let change = tokio::time::timeout(tokio::time::Duration::from_secs(1), rx.recv())
+            .await
+            .expect("timed out waiting for broadcast")
+            .expect("broadcast channel error");
+
+        let route = match change {
+            Change::Upsert(r) => *r,
+            _ => panic!("expected Upsert, got something else"),
+        };
+
+        // Render the card fragment the same way sse_handler does.
+        let html = CardTemplate::for_route(&route)
+            .render()
+            .expect("template render failed");
+
+        // Simulate the OOB attribute injection performed by sse_handler.
+        let oob = format!(r#"hx-swap-oob="outerHTML:#route-{}""#, route.id);
+        let fragment = if let Some(pos) = html.find("<div") {
+            let after_div = pos + 4; // len("<div")
+            format!("{}<div {} {}", &html[..pos], oob, &html[after_div..])
+        } else {
+            html.clone()
+        };
+
+        assert!(
+            fragment.contains("hx-swap-oob"),
+            "fragment must contain OOB swap marker"
+        );
+        assert!(
+            fragment.contains("route-sse-frag-test"),
+            "fragment must contain the route element id"
+        );
+        // grafana has a vendored SVG — verify the icon resolved.
+        assert!(
+            html.contains("<svg"),
+            "rendered card must contain inline SVG for grafana, got: {html}"
         );
     }
 }

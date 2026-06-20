@@ -1,6 +1,8 @@
 <div class="card" id="route-{{ route.id }}">
   <div class="card-header">
-    {% if !route.icon.is_empty() %}
+    {% if let Some(svg) = icon_svg %}
+      <span class="card-icon">{{ svg|safe }}</span>
+    {% else if !route.icon.is_empty() %}
       <span class="card-icon">{{ route.icon }}</span>
     {% endif %}
     <span class="card-title">

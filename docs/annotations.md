@@ -19,7 +19,7 @@ Annotations are applied at discovery time. Changes take effect on the next watch
 
 ## Icon Rendering Note
 
-The `routecrab.io/icon` annotation sets the `icon` field on the route. The card template renders this field as an inline string (`{{ route.icon }}`). The embedded Simple Icons SVG library (`icons.rs`) is available in the codebase but is not currently wired into the card rendering path — the icon field as stored is the slug string, not the resolved SVG.
+The `routecrab.io/icon` annotation sets the icon slug on the route. At render time, routecrab resolves the slug against the embedded Simple Icons subset (`icons.rs`) and injects the SVG directly into the card. If no vendored icon matches the slug, the annotation value is rendered as plain text as a fallback. Resolution order: the annotation slug (if set), otherwise the service name slugified (lowercase, `.` → `dot`, `+` → `plus`, other non-alphanumerics stripped).
 
 ## Worked Example
 

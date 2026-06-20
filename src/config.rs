@@ -13,6 +13,7 @@ pub struct Config {
     pub health_timeout: Duration,
     pub namespace_allowlist: Vec<String>,
     pub namespace_denylist: Vec<String>,
+    // NOTE: currently reserved — the kube-rs watcher uses its default relist behaviour; this knob is not yet honored.
     pub resync_interval: Duration,
 }
 

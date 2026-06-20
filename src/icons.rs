@@ -35,9 +35,12 @@ fn icon_index() -> &'static std::collections::HashMap<String, &'static str> {
 }
 
 /// Slugify a display name to match Simple Icons conventions:
-/// lowercase, drop every character that is not ASCII alphanumeric.
+/// lowercase, translate `.` → `dot` and `+` → `plus`,
+/// then drop every character that is not ASCII alphanumeric.
 fn slugify(name: &str) -> String {
     name.to_lowercase()
+        .replace('.', "dot")
+        .replace('+', "plus")
         .chars()
         .filter(|c| c.is_ascii_alphanumeric())
         .collect()
@@ -46,15 +49,15 @@ fn slugify(name: &str) -> String {
 /// Return the embedded SVG for a service icon.
 ///
 /// Resolution order:
-/// 1. `override_slug` if non-empty.
-/// 2. `name` slugified (lowercase, non-alphanumeric stripped).
+/// 1. `override_slug` if non-empty (lowercased for case-insensitive lookup).
+/// 2. `name` slugified (lowercase, `.` → `dot`, `+` → `plus`, non-alphanumeric stripped).
 ///
 /// Returns `None` when no matching icon is vendored.
 pub fn icon_for(name: &str, override_slug: &str) -> Option<&'static str> {
     let slug = if override_slug.is_empty() {
         slugify(name)
     } else {
-        override_slug.to_owned()
+        override_slug.to_lowercase()
     };
     icon_index().get(&slug).copied()
 }
@@ -102,5 +105,23 @@ mod tests {
             svg.is_some(),
             "'Apache Kafka' should resolve to apachekafka"
         );
+    }
+
+    #[test]
+    fn slugify_dot_to_dot_suffix() {
+        assert_eq!(slugify("nats.io"), "natsdotio");
+    }
+
+    #[test]
+    fn slugify_plus_to_plus_word() {
+        assert_eq!(slugify("c++"), "cplusplus");
+    }
+
+    #[test]
+    fn override_slug_is_case_insensitive() {
+        // Annotation value "Grafana" (mixed case) should resolve.
+        let svg = icon_for("My Service", "Grafana");
+        assert!(svg.is_some(), "uppercase override slug should resolve");
+        assert!(svg.unwrap().contains("<svg"));
     }
 }

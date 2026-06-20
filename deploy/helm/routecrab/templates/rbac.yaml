@@ -7,21 +7,11 @@ metadata:
   labels:
     {{- include "routecrab.labels" . | nindent 4 }}
 rules:
-  # Watch Gateway API resources cluster-wide.
+  # Watch HTTPRoute resources cluster-wide.
   - apiGroups:
       - gateway.networking.k8s.io
     resources:
       - httproutes
-      - gateways
-    verbs:
-      - get
-      - list
-      - watch
-  # Read namespace metadata for inventory.
-  - apiGroups:
-      - ""
-    resources:
-      - namespaces
     verbs:
       - get
       - list

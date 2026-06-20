@@ -41,7 +41,7 @@
           <h2 class="group-heading">{{ group_name }}</h2>
         {% endif %}
         <div class="card-grid">
-          {% for route in routes %}
+          {% for (route, icon_svg) in routes %}
             {% include "_card.html" %}
           {% endfor %}
         </div>

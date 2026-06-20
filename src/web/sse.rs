@@ -10,19 +10,9 @@ use futures::StreamExt;
 use tokio_stream::wrappers::BroadcastStream;
 
 use crate::{
-    model::Route,
     store::{Change, Store},
+    web::card::CardTemplate,
 };
-
-// ── Card fragment template (single route) ─────────────────────────────────
-
-/// Renders `_card.html` for a single route, used both for full-page render
-/// (via the `{% include %}` in index.html) and for SSE OOB fragments.
-#[derive(Template)]
-#[template(path = "_card.html")]
-struct CardTemplate<'a> {
-    route: &'a Route,
-}
 
 // ── SSE handler ───────────────────────────────────────────────────────────
 
@@ -46,7 +36,7 @@ pub async fn sse_handler(State(store): State<Store>) -> impl IntoResponse {
             Err(_) => None,
 
             Ok(Change::Upsert(route)) => {
-                let html = CardTemplate { route: &route }.render().unwrap_or_default();
+                let html = CardTemplate::for_route(&route).render().unwrap_or_default();
                 // Inject the OOB swap attribute into the outer <div> tag.
                 // The card template root is `<div class="card" id="route-{id}">`;
                 // we prepend the hx-swap-oob attribute so htmx targets it by id.

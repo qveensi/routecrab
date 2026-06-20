@@ -7,7 +7,7 @@ use axum::{
 use rust_embed::RustEmbed;
 use serde::Deserialize;
 
-use crate::{config::Config, model::Route, store::Store};
+use crate::{config::Config, icons::icon_for, model::Route, store::Store};
 
 // ── Embedded static assets ────────────────────────────────────────────────
 
@@ -52,12 +52,18 @@ fn mime_type(path: &str) -> &'static str {
 
 // ── Index template ────────────────────────────────────────────────────────
 
+/// A route paired with its resolved icon SVG (if any).
+type RouteWithIcon = (Route, Option<&'static str>);
+
+/// Groups of routes for template rendering: (group_name, routes_with_icons).
+type RouteGroups = Vec<(String, Vec<RouteWithIcon>)>;
+
 #[derive(Template)]
 #[template(path = "index.html")]
 struct IndexTemplate<'a> {
     title: &'a str,
     query: &'a str,
-    groups: Vec<(String, Vec<Route>)>,
+    groups: RouteGroups,
 }
 
 // ── Query params ──────────────────────────────────────────────────────────
@@ -83,7 +89,7 @@ pub async fn index(
     Query(params): Query<BoardQuery>,
 ) -> Result<Html<String>, StatusCode> {
     let q = params.q.trim().to_lowercase();
-    let mut routes: Vec<Route> = state
+    let routes: Vec<Route> = state
         .store
         .list()
         .into_iter()
@@ -98,8 +104,17 @@ pub async fn index(
         })
         .collect();
 
+    // Resolve icons per route, then group.
+    let routes_with_icons: Vec<RouteWithIcon> = routes
+        .into_iter()
+        .map(|r| {
+            let svg = icon_for(&r.name, &r.icon);
+            (r, svg)
+        })
+        .collect();
+
     // Already sorted by (group, order, name) from store.list(); just group.
-    let groups = group_routes(&mut routes);
+    let groups = group_routes_with_icons(routes_with_icons);
 
     let tmpl = IndexTemplate {
         title: &state.title,
@@ -112,18 +127,18 @@ pub async fn index(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-/// Partition a sorted route slice into `(group_name, routes)` pairs.
+/// Partition a sorted (route, icon_svg) slice into `(group_name, items)` pairs.
 /// The order of groups follows the first occurrence in the input slice.
-fn group_routes(routes: &mut Vec<Route>) -> Vec<(String, Vec<Route>)> {
-    let mut groups: Vec<(String, Vec<Route>)> = Vec::new();
-    for route in routes.drain(..) {
+fn group_routes_with_icons(mut items: Vec<RouteWithIcon>) -> RouteGroups {
+    let mut groups: RouteGroups = Vec::new();
+    for (route, icon_svg) in items.drain(..) {
         if let Some(last) = groups.last_mut() {
             if last.0 == route.group {
-                last.1.push(route);
+                last.1.push((route, icon_svg));
                 continue;
             }
         }
-        groups.push((route.group.clone(), vec![route]));
+        groups.push((route.group.clone(), vec![(route, icon_svg)]));
     }
     groups
 }
