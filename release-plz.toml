@@ -8,4 +8,6 @@ name = "routecrab"
 changelog_path = "CHANGELOG.md"
 changelog_update = true
 git_release_enable = true
+# Publish releases directly instead of as drafts (release-plz defaults to draft).
+git_release_draft = false
 publish = false

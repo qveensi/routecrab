@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - *(metrics)* hidden routes now excluded from metrics gauges
 - *(chart)* metrics port always exposed; `metrics.enabled` removed for simplification
 - bump axum to 0.8, axum-prometheus to 0.10, metrics to 0.24, askama to 0.16
-- *(ci)* bump GitHub Actions: checkout v4→v7, upload-artifact v4→v7, download-artifact v3→v8
+- *(ci)* bump GitHub Actions: checkout v5→v7, upload-artifact v4→v7, download-artifact v4→v8
 
 ## [0.1.0](https://github.com/qveensi/routecrab/releases/tag/v0.1.0) - 2026-06-20
 
