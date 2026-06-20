@@ -2,7 +2,7 @@
 name = "routecrab"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.85"
+rust-version = "1.88"
 license = "MIT"
 description = "Kubernetes-native dashboard that auto-discovers Gateway API HTTPRoutes with health checks."
 repository = "https://github.com/qveensi/routecrab"
