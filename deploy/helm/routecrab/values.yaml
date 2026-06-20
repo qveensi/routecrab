@@ -1,0 +1,112 @@
+# Default values for routecrab.
+# This is a YAML-formatted file.
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/qveensi/routecrab
+  # Overrides the image tag. Defaults to the chart's appVersion when empty.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a ServiceAccount should be created.
+  create: true
+  # Annotations to add to the ServiceAccount.
+  annotations: {}
+  # The name of the ServiceAccount to use.
+  # If not set and create is true, a name is generated using the fullname helper.
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+# PSS-restricted pod-level security context.
+# runAsUser/fsGroup reference distroless nonroot uid 65532.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+# PSS-restricted container-level security context.
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65532
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    # No CPU limit by default to avoid throttling; set if required by policy.
+    memory: 128Mi
+
+# Extra environment variables injected into the routecrab container.
+# Use this to configure ROUTECRAB_* settings, for example:
+# env:
+#   - name: ROUTECRAB_LOG_LEVEL
+#     value: "info"
+#   - name: ROUTECRAB_ADDRESS
+#     value: "0.0.0.0"
+env: []
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+topologySpreadConstraints: []
+
+extraVolumes: []
+
+extraVolumeMounts: []
+
+# ─── Task 14 placeholders (templates not yet created) ───────────────────────
+# serviceMonitor:
+#   enabled: false
+# podMonitor:
+#   enabled: false
+# pdb:
+#   enabled: false
+# httpRoute:
+#   enabled: false
+# ingress:
+#   enabled: false
