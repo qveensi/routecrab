@@ -1,50 +1,96 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title }}</title>
   <link rel="stylesheet" href="/assets/app.css">
   <script>
-    // Apply stored theme before first paint to avoid flash
-    (function() {
-      var t = localStorage.getItem('theme') || 'light';
+    // Apply stored theme before first paint to avoid flash. Dark is the default.
+    (function () {
+      var t = localStorage.getItem('theme') || 'dark';
       document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
 </head>
 <body>
   <header class="header">
-    <h1>{{ title }}</h1>
-    <input
-      class="search-input"
-      type="search"
-      name="q"
-      placeholder="Search routes…"
-      value="{{ query }}"
-      hx-get="/"
-      hx-trigger="input changed delay:300ms, search"
-      hx-target="#board"
-      hx-select="#board"
-      hx-push-url="true"
-      autocomplete="off"
-    >
-    <button class="theme-toggle" onclick="toggleTheme()">Toggle theme</button>
+    <a class="brand" href="/" aria-label="{{ title }}">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="5" cy="6" r="2.4"></circle>
+          <circle cx="19" cy="6" r="2.4"></circle>
+          <circle cx="12" cy="18" r="2.4"></circle>
+          <path d="M7 7.4 10.4 16M16.8 7.6 13.4 16M7.2 6h9.6"></path>
+        </svg>
+      </span>
+      <span class="brand-name">route<b>crab</b></span>
+      <span class="live" id="live" data-state="connecting" title="Live updates connection">
+        <span class="live-dot" aria-hidden="true"></span><span class="live-label">live</span>
+      </span>
+    </a>
+
+    <div class="summary" id="summary" aria-label="Cluster health summary">
+      <span class="stat ok"   data-zero="true" title="Healthy services"><span class="dot" aria-hidden="true"></span><b id="c-healthy">0</b><span class="stat-label">healthy</span></span>
+      <span class="stat warn" data-zero="true" title="Degraded services"><span class="dot" aria-hidden="true"></span><b id="c-degraded">0</b><span class="stat-label">degraded</span></span>
+      <span class="stat down" data-zero="true" title="Unhealthy services"><span class="dot" aria-hidden="true"></span><b id="c-unhealthy">0</b><span class="stat-label">unhealthy</span></span>
+      <span class="stat idle" data-zero="true" title="Unknown services"><span class="dot" aria-hidden="true"></span><b id="c-unknown">0</b><span class="stat-label">unknown</span></span>
+    </div>
+
+    <div class="header-tools">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path>
+        </svg>
+        <input
+          class="search-input"
+          type="search"
+          name="q"
+          placeholder="Search routes…"
+          value="{{ query }}"
+          hx-get="/"
+          hx-trigger="input changed delay:300ms, search"
+          hx-target="#board"
+          hx-select="#board > *"
+          hx-push-url="true"
+          autocomplete="off"
+          aria-label="Search routes"
+        >
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle color theme">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"></path></svg>
+      </button>
+    </div>
   </header>
 
   <main class="main" id="board" hx-ext="sse" sse-connect="/events">
     {% if groups.is_empty() %}
-      <p class="empty">No routes found.</p>
+      <div class="no-results">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        {% if !query.is_empty() %}
+          <h2>No matching routes</h2>
+          <p>Nothing matched <code>{{ query }}</code>. Try a different service, title, or description.</p>
+        {% else %}
+          <h2>No routes discovered</h2>
+          <p>routecrab hasn't found any Gateway API HTTPRoutes in the cluster yet. They'll appear here automatically.</p>
+        {% endif %}
+      </div>
     {% else %}
       {% for (group_name, routes) in groups %}
-        {% if !group_name.is_empty() %}
-          <h2 class="group-heading">{{ group_name }}</h2>
-        {% endif %}
-        <div class="card-grid">
-          {% for (route, icon_svg) in routes %}
-            {% include "_card.html" %}
-          {% endfor %}
-        </div>
+        <section class="group">
+          {% if !group_name.is_empty() %}
+            <div class="group-head">
+              <h2 class="group-heading">{{ group_name }}</h2>
+              <span class="group-meta" aria-hidden="true"></span>
+            </div>
+          {% endif %}
+          <div class="card-grid">
+            {% for (route, icon_svg) in routes %}
+              {% include "_card.html" %}
+            {% endfor %}
+          </div>
+        </section>
       {% endfor %}
     {% endif %}
   </main>
@@ -58,6 +104,83 @@
       html.setAttribute('data-theme', next);
       localStorage.setItem('theme', next);
     }
+
+    (function () {
+      function firstLetter(s) { s = (s || '').trim(); return s ? s.charAt(0).toUpperCase() : '?'; }
+
+      function decorateMonos(root) {
+        (root || document).querySelectorAll('.card-icon--mono').forEach(function (el) {
+          if (!el.textContent) { el.textContent = firstLetter(el.getAttribute('data-mono')); }
+        });
+      }
+
+      function count(scope) {
+        var c = { healthy: 0, degraded: 0, unhealthy: 0, unknown: 0 };
+        scope.querySelectorAll('.card').forEach(function (card) {
+          var h = card.getAttribute('data-health') || 'unknown';
+          if (c[h] === undefined) h = 'unknown';
+          c[h]++;
+        });
+        return c;
+      }
+
+      function setStat(id, n) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = n;
+        var st = el.closest('.stat');
+        if (st) st.setAttribute('data-zero', n === 0 ? 'true' : 'false');
+      }
+
+      function chip(kind, n) { return '<span class="gm gm-' + kind + '"><i></i>' + n + '</span>'; }
+
+      function refresh() {
+        var board = document.getElementById('board');
+        if (!board) return;
+        decorateMonos(board);
+
+        var total = count(board);
+        setStat('c-healthy', total.healthy);
+        setStat('c-degraded', total.degraded);
+        setStat('c-unhealthy', total.unhealthy);
+        setStat('c-unknown', total.unknown);
+
+        board.querySelectorAll('.group').forEach(function (g) {
+          var meta = g.querySelector('.group-meta');
+          if (!meta) return;
+          var gc = count(g);
+          var html = chip('healthy', gc.healthy);
+          ['degraded', 'unhealthy', 'unknown'].forEach(function (k) {
+            if (gc[k] > 0) html += chip(k, gc[k]);
+          });
+          meta.innerHTML = html;
+        });
+      }
+
+      function setLive(state) {
+        var el = document.getElementById('live');
+        if (el) el.setAttribute('data-state', state);
+      }
+
+      document.addEventListener('htmx:sseOpen', function () { setLive('live'); });
+      document.addEventListener('htmx:sseError', function () { setLive('offline'); });
+      document.addEventListener('htmx:sseClose', function () { setLive('offline'); });
+      document.addEventListener('htmx:afterSettle', refresh);
+      document.addEventListener('htmx:oobAfterSwap', function (e) {
+        var t = e.detail && e.detail.target;
+        if (t && t.classList && t.classList.contains('card')) {
+          t.classList.remove('rc-flash');
+          void t.offsetWidth;
+          t.classList.add('rc-flash');
+        }
+      });
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', refresh);
+      } else {
+        refresh();
+      }
+    })();
   </script>
 </body>
 </html>

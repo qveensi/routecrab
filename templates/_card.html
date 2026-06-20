@@ -1,17 +1,20 @@
-<div class="card" id="route-{{ route.id }}">
-  <div class="card-header">
+<div class="card" data-health="{{ route.health|lower }}" id="route-{{ route.id }}">
+  <div class="card-top">
     {% if let Some(svg) = icon_svg %}
-      <span class="card-icon">{{ svg|safe }}</span>
+      <span class="card-icon" aria-hidden="true">{{ svg|safe }}</span>
     {% else if !route.icon.is_empty() %}
-      <span class="card-icon">{{ route.icon }}</span>
+      <span class="card-icon card-icon--text" aria-hidden="true">{{ route.icon }}</span>
+    {% else %}
+      <span class="card-icon card-icon--mono" aria-hidden="true" data-mono="{% if !route.title.is_empty() %}{{ route.title }}{% else %}{{ route.name }}{% endif %}"></span>
     {% endif %}
-    <span class="card-title">
-      {% if !route.title.is_empty() %}{{ route.title }}{% else %}{{ route.name }}{% endif %}
+    <span class="card-title">{% if !route.title.is_empty() %}{{ route.title }}{% else %}{{ route.name }}{% endif %}</span>
+    <span class="badge" title="Health: {{ route.health|lower }}">
+      <span class="badge-dot" aria-hidden="true"></span>
+      <span class="badge-label">{{ route.health|lower }}</span>
     </span>
-    <span class="badge badge-{{ route.health|lower }}">{{ route.health|lower }}</span>
   </div>
   {% if !route.url.is_empty() %}
-    <a class="card-url" href="{{ route.url }}" target="_blank" rel="noopener">{{ route.url }}</a>
+    <a class="card-url" href="{{ route.url }}" target="_blank" rel="noopener" title="{{ route.url }}">{{ route.url }}</a>
   {% endif %}
   {% if !route.description.is_empty() %}
     <p class="card-description">{{ route.description }}</p>
