@@ -27,10 +27,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # NOTE: Using GITHUB_TOKEN means the release commit/tag created by
-          # release-plz will NOT re-trigger other workflows (GitHub skips events
-          # from the default token). If downstream CI must run on the tag, swap
-          # GITHUB_TOKEN for secrets.RELEASE_PLZ_TOKEN (a PAT with repo scope).
+          # A PAT (RELEASE_PLZ_TOKEN) is required so the tag release-plz pushes
+          # re-triggers the tag-gated publish workflows below — GitHub skips
+          # workflow events from the default GITHUB_TOKEN. Falls back to
+          # GITHUB_TOKEN (release succeeds, but image/chart publish won't fire).
           persist-credentials: false
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -39,7 +39,7 @@ jobs:
         with:
           command: release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN || secrets.GITHUB_TOKEN }}
 
   release-plz-pr:
     name: release-plz PR
@@ -65,7 +65,9 @@ jobs:
         with:
           command: release-pr
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # PAT lets Actions open the version-bump PR (GITHUB_TOKEN is forbidden
+          # from creating PRs unless the repo setting is enabled).
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN || secrets.GITHUB_TOKEN }}
 
   # ---------------------------------------------------------------------------
   # image-publish: multi-arch Docker image → ghcr.io/qveensi/routecrab
