@@ -87,7 +87,7 @@ mod tests {
             ..Default::default()
         });
 
-        let app = router(store, Config::default());
+        let app = router(store.clone(), Config::default());
 
         // healthz
         let res = app
@@ -140,6 +140,17 @@ mod tests {
         assert!(
             !body_str.contains("beta-service"),
             "beta should be filtered out"
+        );
+
+        // Board partial renders the seeded visible route and excludes hidden.
+        let board = crate::web::pages::render_board(&store);
+        assert!(
+            board.contains("my-awesome-service"),
+            "board must list visible route"
+        );
+        assert!(
+            !board.contains("hidden-service"),
+            "board must exclude hidden route"
         );
 
         // GET /events returns 200 text/event-stream
