@@ -29,7 +29,12 @@ pub fn route_from_httproute(hr: &HTTPRoute) -> Route {
         .unwrap_or_else(|| "/".to_string());
 
     let first_host = hosts.first().cloned().unwrap_or_default();
-    let url = format!("https://{}{}", first_host, first_path);
+    // Guard: an empty host produces a malformed URL like "https:///path".
+    let url = if first_host.is_empty() {
+        String::new()
+    } else {
+        format!("https://{}{}", first_host, first_path)
+    };
 
     let paths: Vec<String> = hr
         .spec
@@ -94,26 +99,35 @@ pub async fn watch(store: Store, cfg: Config) {
     let api: Api<HTTPRoute> = Api::all(client);
     let mut stream = std::pin::pin!(watcher(api, watcher::Config::default()));
 
-    while let Some(event) = stream.try_next().await.unwrap_or_else(|e| {
-        tracing::warn!("watcher error (will retry): {e}");
-        None
-    }) {
-        match event {
-            Event::Apply(hr) | Event::InitApply(hr) => {
-                let ns = hr.metadata.namespace.as_deref().unwrap_or("");
-                if !namespace_allowed(ns, &cfg) {
-                    continue;
+    // Use an explicit loop so stream errors are logged and skipped rather than
+    // terminating discovery: Ok(None) is a clean end, Err is transient.
+    loop {
+        match stream.try_next().await {
+            Ok(Some(event)) => match event {
+                Event::Apply(hr) | Event::InitApply(hr) => {
+                    let ns = hr.metadata.namespace.as_deref().unwrap_or("");
+                    if !namespace_allowed(ns, &cfg) {
+                        continue;
+                    }
+                    store.upsert(route_from_httproute(&hr));
                 }
-                store.upsert(route_from_httproute(&hr));
+                Event::Delete(hr) => {
+                    let ns = hr.metadata.namespace.as_deref().unwrap_or("");
+                    if !namespace_allowed(ns, &cfg) {
+                        continue;
+                    }
+                    let name = hr.metadata.name.as_deref().unwrap_or("");
+                    let id = format!("{}/{}", ns, name);
+                    store.remove(&id);
+                }
+                // Init / InitDone signal a full re-list cycle — no action needed.
+                Event::Init | Event::InitDone => {}
+            },
+            Ok(None) => break,
+            Err(e) => {
+                tracing::warn!("watcher error: {e}");
+                continue;
             }
-            Event::Delete(hr) => {
-                let ns = hr.metadata.namespace.as_deref().unwrap_or("");
-                let name = hr.metadata.name.as_deref().unwrap_or("");
-                let id = format!("{}/{}", ns, name);
-                store.remove(&id);
-            }
-            // Init / InitDone signal a full re-list cycle — no action needed.
-            Event::Init | Event::InitDone => {}
         }
     }
 }
@@ -134,6 +148,16 @@ fn namespace_allowed(ns: &str, cfg: &Config) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::Config;
+
+    fn cfg_with(allowlist: Vec<&str>, denylist: Vec<&str>) -> Config {
+        let allow_csv = allowlist.join(",");
+        let deny_csv = denylist.join(",");
+        Config::from_iter([
+            ("ROUTECRAB_NAMESPACE_ALLOWLIST".to_string(), allow_csv),
+            ("ROUTECRAB_NAMESPACE_DENYLIST".to_string(), deny_csv),
+        ])
+    }
 
     #[test]
     fn maps_hostname_and_annotations() {
@@ -143,5 +167,23 @@ mod tests {
         assert_eq!(r.namespace, "demo");
         assert_eq!(r.url, "https://app.example.com/");
         assert_eq!(r.group, "demo"); // default = namespace
+    }
+
+    #[test]
+    fn namespace_in_denylist_is_rejected() {
+        let cfg = cfg_with(vec![], vec!["kube-system"]);
+        assert!(!namespace_allowed("kube-system", &cfg));
+    }
+
+    #[test]
+    fn namespace_not_in_allowlist_is_rejected() {
+        let cfg = cfg_with(vec!["production"], vec![]);
+        assert!(!namespace_allowed("staging", &cfg));
+    }
+
+    #[test]
+    fn empty_allowlist_and_not_denied_is_accepted() {
+        let cfg = cfg_with(vec![], vec!["kube-system"]);
+        assert!(namespace_allowed("default", &cfg));
     }
 }
