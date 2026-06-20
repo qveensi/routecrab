@@ -1,0 +1,19 @@
+<div class="card" id="route-{{ route.id }}">
+  <div class="card-header">
+    {% if let Some(svg) = icon_svg %}
+      <span class="card-icon">{{ svg|safe }}</span>
+    {% else if !route.icon.is_empty() %}
+      <span class="card-icon">{{ route.icon }}</span>
+    {% endif %}
+    <span class="card-title">
+      {% if !route.title.is_empty() %}{{ route.title }}{% else %}{{ route.name }}{% endif %}
+    </span>
+    <span class="badge badge-{{ route.health|lower }}">{{ route.health|lower }}</span>
+  </div>
+  {% if !route.url.is_empty() %}
+    <a class="card-url" href="{{ route.url }}" target="_blank" rel="noopener">{{ route.url }}</a>
+  {% endif %}
+  {% if !route.description.is_empty() %}
+    <p class="card-description">{{ route.description }}</p>
+  {% endif %}
+</div>

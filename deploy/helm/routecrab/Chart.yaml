@@ -1,0 +1,13 @@
+apiVersion: v2
+name: routecrab
+description: >
+  routecrab watches Gateway API HTTPRoute/Gateway resources cluster-wide and
+  exposes a live JSON inventory with health classification.
+type: application
+version: "0.1.0"
+appVersion: "0.1.0"
+home: https://github.com/qveensi/routecrab
+sources:
+  - https://github.com/qveensi/routecrab
+# Requires Gateway API CRDs (gateway.networking.k8s.io) to be present.
+kubeVersion: ">=1.25.0-0"

@@ -1,0 +1,11 @@
+[workspace]
+# Keep git tags and GitHub releases enabled (they trigger image/chart publish).
+# Disable crates.io publish — routecrab is not (yet) published to the registry.
+publish = false
+
+[[package]]
+name = "routecrab"
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = false
