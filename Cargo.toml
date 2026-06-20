@@ -2,7 +2,7 @@
 name = "routecrab"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.83"
+rust-version = "1.85"
 license = "MIT"
 description = "Kubernetes-native dashboard that auto-discovers Gateway API HTTPRoutes with health checks."
 repository = "https://github.com/qveensi/routecrab"
@@ -23,8 +23,8 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 futures = "0.3"
 humantime = "2"
-indexmap = { version = "=2.13.1", features = ["serde"] }
-reqwest = { version = "0.11", default-features = false, features = ["rustls-tls"] }
+indexmap = { version = "2", features = ["serde"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
