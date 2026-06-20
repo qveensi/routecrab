@@ -13,7 +13,7 @@ spec:
     matchLabels:
       {{- include "routecrab.selectorLabels" . | nindent 6 }}
   podMetricsEndpoints:
-    - port: http
+    - port: metrics
       path: /metrics
       interval: {{ .Values.podMonitor.interval }}
 {{- end }}

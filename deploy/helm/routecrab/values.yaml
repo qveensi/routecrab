@@ -52,6 +52,13 @@ service:
   type: ClusterIP
   port: 80
 
+metrics:
+  # Expose a dedicated Prometheus scrape port (ROUTECRAB_METRICS_PORT).
+  enabled: true
+  port: 9090
+  service:
+    port: 9090
+
 resources:
   requests:
     cpu: 50m
