@@ -1,4 +1,8 @@
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+
+#[allow(dead_code)]
+pub const ANNOTATION_PREFIX: &str = "routecrab.io/";
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -37,6 +41,29 @@ impl Route {
             &self.title
         }
     }
+
+    #[allow(dead_code)]
+    pub fn apply_annotations(&mut self, ann: &BTreeMap<String, String>) {
+        for (key, value) in ann {
+            if let Some(suffix) = key.strip_prefix(ANNOTATION_PREFIX) {
+                match suffix {
+                    "title" => self.title = value.clone(),
+                    "description" => self.description = value.clone(),
+                    "group" => self.group = value.clone(),
+                    "icon" => self.icon = value.clone(),
+                    "url" => self.url = value.clone(),
+                    "order" => {
+                        if let Ok(order_val) = value.parse::<i32>() {
+                            self.order = order_val;
+                        }
+                    }
+                    "hidden" => self.hidden = value == "true",
+                    "health" => self.monitor_disabled = value == "false",
+                    _ => {}
+                }
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -51,5 +78,25 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(r.display_title(), "auth-server");
+    }
+
+    #[test]
+    fn health_false_disables_monitor() {
+        let mut r = Route::default();
+        let mut a = std::collections::BTreeMap::new();
+        a.insert("routecrab.io/health".into(), "false".into());
+        r.apply_annotations(&a);
+        assert!(r.monitor_disabled);
+    }
+
+    #[test]
+    fn hidden_and_group() {
+        let mut r = Route::default();
+        let mut a = std::collections::BTreeMap::new();
+        a.insert("routecrab.io/hidden".into(), "true".into());
+        a.insert("routecrab.io/group".into(), "infra".into());
+        r.apply_annotations(&a);
+        assert!(r.hidden);
+        assert_eq!(r.group, "infra");
     }
 }
