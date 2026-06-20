@@ -16,6 +16,12 @@ pub struct Config {
     pub resync_interval: Duration,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self::from_iter(std::iter::empty::<(String, String)>())
+    }
+}
+
 impl Config {
     /// Parse configuration from an iterable of key-value pairs (e.g., from std::env::vars()).
     /// Unknown keys are ignored. Falls back to defaults when values are missing or unparseable.
