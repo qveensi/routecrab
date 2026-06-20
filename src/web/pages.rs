@@ -2,7 +2,7 @@ use askama::Template;
 use axum::{
     extract::{Query, State},
     http::StatusCode,
-    response::Html,
+    response::{Html, IntoResponse},
 };
 use rust_embed::RustEmbed;
 use serde::Deserialize;
@@ -49,9 +49,6 @@ fn mime_type(path: &str) -> &'static str {
         "application/octet-stream"
     }
 }
-
-// Bring IntoResponse into scope for the static_handler return.
-use axum::response::IntoResponse;
 
 // ── Index template ────────────────────────────────────────────────────────
 

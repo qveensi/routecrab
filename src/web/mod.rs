@@ -77,6 +77,12 @@ mod tests {
             name: "beta-service".into(),
             ..Default::default()
         });
+        store.upsert(Route {
+            id: "hidden-1".into(),
+            name: "hidden-service".into(),
+            hidden: true,
+            ..Default::default()
+        });
 
         let app = router(store, Config::default());
 
@@ -109,6 +115,10 @@ mod tests {
         assert!(
             body_str.contains("my-awesome-service"),
             "body must contain the route name"
+        );
+        assert!(
+            !body_str.contains("hidden-service"),
+            "hidden routes must not appear on the board"
         );
 
         // search query filters routes
