@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/assets/app.css">
+  <script>
+    // Apply stored theme before first paint to avoid flash
+    (function() {
+      var t = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+</head>
+<body>
+  <header class="header">
+    <h1>{{ title }}</h1>
+    <input
+      class="search-input"
+      type="search"
+      name="q"
+      placeholder="Search routes…"
+      value="{{ query }}"
+      hx-get="/"
+      hx-trigger="input changed delay:300ms, search"
+      hx-target="#board"
+      hx-push-url="true"
+      autocomplete="off"
+    >
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle theme</button>
+  </header>
+
+  <main class="main" id="board" hx-ext="sse">
+    {% if groups.is_empty() %}
+      <p class="empty">No routes found.</p>
+    {% else %}
+      {% for (group_name, routes) in groups %}
+        {% if !group_name.is_empty() %}
+          <h2 class="group-heading">{{ group_name }}</h2>
+        {% endif %}
+        <div class="card-grid">
+          {% for route in routes %}
+            {% include "_card.html" %}
+          {% endfor %}
+        </div>
+      {% endfor %}
+    {% endif %}
+  </main>
+
+  <script src="/assets/htmx.min.js"></script>
+  <script src="/assets/sse.js"></script>
+  <script>
+    function toggleTheme() {
+      var html = document.documentElement;
+      var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    }
+  </script>
+</body>
+</html>

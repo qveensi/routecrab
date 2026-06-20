@@ -29,6 +29,8 @@ kube = { version = "3", features = ["runtime", "client", "derive"] }
 k8s-openapi = { version = "0.27", features = ["latest"] }
 gateway-api = "0.21.0"
 axum-prometheus = "0.7.0"
+askama = "0.14.0"
+rust-embed = { version = "8.11.0", features = ["interpolate-folder-path"] }
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

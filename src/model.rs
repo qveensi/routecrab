@@ -1,5 +1,7 @@
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::fmt;
+
+use serde::{Deserialize, Serialize};
 
 #[allow(dead_code)]
 pub const ANNOTATION_PREFIX: &str = "routecrab.io/";
@@ -30,6 +32,17 @@ pub struct Route {
     pub hosts: Vec<String>,
     pub paths: Vec<String>,
     pub health: HealthStatus,
+}
+
+impl fmt::Display for HealthStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            HealthStatus::Unknown => f.write_str("unknown"),
+            HealthStatus::Healthy => f.write_str("healthy"),
+            HealthStatus::Degraded => f.write_str("degraded"),
+            HealthStatus::Unhealthy => f.write_str("unhealthy"),
+        }
+    }
 }
 
 impl Route {

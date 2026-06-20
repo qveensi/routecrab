@@ -1,4 +1,5 @@
 pub mod api;
+pub mod pages;
 
 use axum::{routing::get, Router};
 use axum_prometheus::PrometheusMetricLayer;
@@ -8,23 +9,29 @@ use crate::{config::Config, store::Store};
 /// Build the main axum Router.
 ///
 /// Endpoints:
-/// - GET /healthz       → 200 "ok"
-/// - GET /api/routes    → JSON list of all routes (sorted)
-/// - GET /metrics       → Prometheus text exposition
-///
-/// The router is intentionally flat and extensible: callers (tasks 8/9) can
-/// merge additional routers via `Router::merge` before binding.
-pub fn router(store: Store, _cfg: Config) -> Router {
+/// - GET /           → HTML dashboard board
+/// - GET /healthz    → 200 "ok"
+/// - GET /api/routes → JSON list of all routes (sorted)
+/// - GET /metrics    → Prometheus text exposition
+/// - GET /assets/*   → static embedded assets (htmx, css)
+pub fn router(store: Store, cfg: Config) -> Router {
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
+    let page_state = pages::page_state(store.clone(), &cfg);
 
     Router::new()
-        .route("/healthz", get(healthz))
-        .route("/api/routes", get(api::api_routes))
-        .route(
-            "/metrics",
-            get(move || async move { metric_handle.render() }),
+        .route("/", get(pages::index))
+        .route("/assets/*path", get(pages::static_handler))
+        .with_state(page_state)
+        .merge(
+            Router::new()
+                .route("/healthz", get(healthz))
+                .route("/api/routes", get(api::api_routes))
+                .route(
+                    "/metrics",
+                    get(move || async move { metric_handle.render() }),
+                )
+                .with_state(store),
         )
-        .with_state(store)
         .layer(prometheus_layer)
 }
 
@@ -36,29 +43,90 @@ async fn healthz() -> &'static str {
 mod tests {
     use axum::body::Body;
     use axum::http::Request;
+    use http_body_util::BodyExt;
     use tower::ServiceExt;
 
     use crate::{config::Config, model::Route, store::Store, web::router};
 
+    /// All assertions share one router instance to avoid registering the
+    /// global Prometheus recorder more than once per process.
     #[tokio::test]
-    async fn healthz_ok_and_api_lists() {
+    async fn web_router_integration() {
         let store = Store::new();
         store.upsert(Route {
             id: "a".into(),
             name: "a".into(),
             ..Default::default()
         });
+        store.upsert(Route {
+            id: "test-route-1".into(),
+            name: "my-awesome-service".into(),
+            // no title set — display_title() falls back to name
+            group: "production".into(),
+            url: "https://example.com".into(),
+            description: "Test description".into(),
+            ..Default::default()
+        });
+        store.upsert(Route {
+            id: "svc-1".into(),
+            name: "alpha-service".into(),
+            ..Default::default()
+        });
+        store.upsert(Route {
+            id: "svc-2".into(),
+            name: "beta-service".into(),
+            ..Default::default()
+        });
+
         let app = router(store, Config::default());
+
+        // healthz
         let res = app
             .clone()
             .oneshot(Request::get("/healthz").body(Body::empty()).unwrap())
             .await
             .unwrap();
-        assert_eq!(res.status(), 200);
+        assert_eq!(res.status(), 200, "healthz must be 200");
+
+        // api/routes
         let res = app
+            .clone()
             .oneshot(Request::get("/api/routes").body(Body::empty()).unwrap())
             .await
             .unwrap();
-        assert_eq!(res.status(), 200);
+        assert_eq!(res.status(), 200, "api/routes must be 200");
+
+        // GET / returns html containing a route name
+        let res = app
+            .clone()
+            .oneshot(Request::get("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200, "index must be 200");
+        let body = res.into_body().collect().await.unwrap().to_bytes();
+        let body_str = String::from_utf8_lossy(&body);
+        assert!(body_str.contains("<html"), "body must contain <html");
+        assert!(
+            body_str.contains("my-awesome-service"),
+            "body must contain the route name"
+        );
+
+        // search query filters routes
+        let res = app
+            .clone()
+            .oneshot(Request::get("/?q=alpha").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200, "filtered index must be 200");
+        let body = res.into_body().collect().await.unwrap().to_bytes();
+        let body_str = String::from_utf8_lossy(&body);
+        assert!(
+            body_str.contains("alpha-service"),
+            "alpha should be visible"
+        );
+        assert!(
+            !body_str.contains("beta-service"),
+            "beta should be filtered out"
+        );
     }
 }
