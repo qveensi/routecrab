@@ -39,17 +39,13 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
-            {{- if .Values.metrics.enabled }}
             - name: metrics
               containerPort: {{ .Values.metrics.port }}
               protocol: TCP
-            {{- end }}
           env:
             # Port is fixed; override via values.env if needed.
             - name: ROUTECRAB_PORT
               value: "8080"
-            - name: ROUTECRAB_METRICS_ENABLED
-              value: {{ .Values.metrics.enabled | quote }}
             - name: ROUTECRAB_METRICS_PORT
               value: {{ .Values.metrics.port | quote }}
             {{- with .Values.env }}

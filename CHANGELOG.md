@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/qveensi/routecrab/releases/tag/v0.2.0) - 2026-06-21
+
+### Added
+
+- *(health)* custom health endpoints via `routecrab.io/health-url` annotation for full URL override
+- *(health)* `routecrab.io/health-path` annotation for path override on the route origin
+- *(metrics)* separate metrics port (`ROUTECRAB_METRICS_PORT` / `ROUTECRAB_METRICS_ADDRESS`, default :9090)
+- *(metrics)* metrics listener is independent of the main HTTP server
+
+### Changed
+
+- *(web)* live board refresh via debounced full-board SSE event (300ms debounce) replaces per-route out-of-band updates
+- *(health)* hidden routes now excluded from health checks
+- *(metrics)* hidden routes now excluded from metrics gauges
+- *(chart)* metrics port always exposed; `metrics.enabled` removed for simplification
+- bump axum to 0.8, axum-prometheus to 0.10, metrics to 0.24, askama to 0.16
+- *(ci)* bump GitHub Actions: checkout v4→v7, upload-artifact v4→v7, download-artifact v3→v8
+
 ## [0.1.0](https://github.com/qveensi/routecrab/releases/tag/v0.1.0) - 2026-06-20
 
 ### Added

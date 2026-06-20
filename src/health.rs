@@ -20,11 +20,11 @@ pub fn classify(status: Option<u16>, elapsed: Duration, degraded_after: Duration
 /// Return true if a route should be probed.
 /// A route is eligible when it has either a non-empty public URL or an
 /// explicit health_url override (the internal-healthz use case), and
-/// monitoring has not been disabled.
+/// monitoring has not been disabled, and the route is not hidden.
 /// Note: `health_path` alone with an empty `url` stays ineligible — the path
 /// requires a base origin to resolve and `probe_target` would return "".
 pub fn should_check(r: &Route) -> bool {
-    (!r.url.is_empty() || !r.health_url.is_empty()) && !r.monitor_disabled
+    !r.hidden && !r.monitor_disabled && (!r.url.is_empty() || !r.health_url.is_empty())
 }
 
 /// Resolve the URL to probe for a route.
@@ -149,6 +149,21 @@ mod tests {
         assert!(!should_check(&Route {
             url: "".into(),
             health_path: "/healthz".into(),
+            ..Default::default()
+        }));
+    }
+
+    #[test]
+    fn hidden_routes_skip_check() {
+        // A hidden route should NOT be probed, even with a valid URL.
+        assert!(!should_check(&Route {
+            url: "http://x".into(),
+            hidden: true,
+            ..Default::default()
+        }));
+        // A non-hidden route with a URL should be probed (baseline).
+        assert!(should_check(&Route {
+            url: "http://x".into(),
             ..Default::default()
         }));
     }

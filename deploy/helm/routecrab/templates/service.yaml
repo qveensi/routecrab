@@ -11,11 +11,9 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
-    {{- if .Values.metrics.enabled }}
     - name: metrics
-      port: {{ .Values.metrics.service.port }}
+      port: {{ .Values.metrics.port }}
       targetPort: metrics
       protocol: TCP
-    {{- end }}
   selector:
     {{- include "routecrab.selectorLabels" . | nindent 4 }}
