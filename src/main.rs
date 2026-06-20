@@ -13,9 +13,27 @@ async fn main() {
 
     let store = Store::new();
 
-    // Build the router first — this registers the global metrics recorder
-    // (PrometheusMetricLayer::pair) so our custom gauges land in the same registry.
-    let app = routecrab::web::router(store.clone(), cfg.clone());
+    // Build the pair once — registers the global metrics recorder so all custom
+    // gauges land in the same registry.
+    let (prometheus_layer, metric_handle) = axum_prometheus::PrometheusMetricLayer::pair();
+    let app = routecrab::web::router(store.clone(), cfg.clone(), prometheus_layer);
+
+    // Dedicated metrics listener (separate port), gated by config.
+    if cfg.metrics_enabled {
+        let metrics_app = routecrab::web::metrics_router(metric_handle);
+        let metrics_addr = format!("{}:{}", cfg.metrics_address, cfg.metrics_port);
+        match tokio::net::TcpListener::bind(&metrics_addr).await {
+            Ok(l) => {
+                tracing::info!(address = %metrics_addr, "metrics endpoint listening");
+                tokio::spawn(async move {
+                    if let Err(e) = axum::serve(l, metrics_app).await {
+                        tracing::error!("metrics server error: {e}");
+                    }
+                });
+            }
+            Err(e) => tracing::error!("cannot bind metrics {metrics_addr}: {e}"),
+        }
+    }
 
     let bind_addr = format!("{}:{}", cfg.address, cfg.port);
     let listener = tokio::net::TcpListener::bind(&bind_addr)

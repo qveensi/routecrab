@@ -4,22 +4,24 @@ pub mod pages;
 pub mod sse;
 
 use axum::{routing::get, Router};
-use axum_prometheus::PrometheusMetricLayer;
+use axum_prometheus::{metrics_exporter_prometheus::PrometheusHandle, PrometheusMetricLayer};
 
 use crate::{config::Config, store::Store};
 
-/// Build the main axum Router.
+/// Build the main app router. The prometheus layer is created once in `main`
+/// (single global recorder) and passed in.
 ///
 /// Endpoints:
 /// - GET /           → HTML dashboard board
 /// - GET /healthz    → 200 "ok"
 /// - GET /api/routes → JSON list of all routes (sorted)
-/// - GET /metrics    → Prometheus text exposition
 /// - GET /assets/*   → static embedded assets (htmx, css)
-pub fn router(store: Store, cfg: Config) -> Router {
-    let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
+pub fn router(
+    store: Store,
+    cfg: Config,
+    prometheus_layer: PrometheusMetricLayer<'static>,
+) -> Router {
     let page_state = pages::page_state(store.clone(), &cfg);
-
     Router::new()
         .route("/", get(pages::index))
         .route("/assets/*path", get(pages::static_handler))
@@ -29,13 +31,14 @@ pub fn router(store: Store, cfg: Config) -> Router {
                 .route("/healthz", get(healthz))
                 .route("/api/routes", get(api::api_routes))
                 .route("/events", get(sse::sse_handler))
-                .route(
-                    "/metrics",
-                    get(move || async move { metric_handle.render() }),
-                )
                 .with_state(store),
         )
         .layer(prometheus_layer)
+}
+
+/// Standalone router that serves `GET /metrics` from the recorder handle.
+pub fn metrics_router(handle: PrometheusHandle) -> Router {
+    Router::new().route("/metrics", get(move || async move { handle.render() }))
 }
 
 async fn healthz() -> &'static str {
@@ -87,7 +90,8 @@ mod tests {
             ..Default::default()
         });
 
-        let app = router(store.clone(), Config::default());
+        let (layer, _handle) = axum_prometheus::PrometheusMetricLayer::pair();
+        let app = router(store.clone(), Config::default(), layer);
 
         // healthz
         let res = app
