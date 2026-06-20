@@ -23,6 +23,23 @@ pub fn should_check(r: &Route) -> bool {
     !r.url.is_empty() && !r.monitor_disabled
 }
 
+/// Resolve the URL to probe for a route.
+/// Precedence: `health_url` (full override) > `health_path` (path on the
+/// route URL's origin) > `url` (the public URL itself).
+pub fn probe_target(r: &Route) -> String {
+    if !r.health_url.is_empty() {
+        return r.health_url.clone();
+    }
+    if !r.health_path.is_empty() {
+        if let Ok(mut u) = reqwest::Url::parse(&r.url) {
+            u.set_path(&r.health_path);
+            u.set_query(None);
+            return u.to_string();
+        }
+    }
+    r.url.clone()
+}
+
 /// Run the health-check loop. Returns immediately when health checking is
 /// disabled in config. Otherwise ticks on `cfg.health_interval`, probing
 /// each eligible route with a HEAD request and storing the result.
@@ -51,9 +68,10 @@ pub async fn run(store: crate::store::Store, cfg: crate::config::Config) {
                 continue;
             }
 
+            let target = probe_target(&route);
             let start = tokio::time::Instant::now();
             let status_code = client
-                .head(&route.url)
+                .head(&target)
                 .send()
                 .await
                 .ok()
@@ -106,5 +124,35 @@ mod tests {
             url: "http://x".into(),
             ..Default::default()
         }));
+    }
+
+    #[test]
+    fn probe_target_precedence() {
+        // full override wins
+        assert_eq!(
+            probe_target(&Route {
+                url: "https://app.example.com/".into(),
+                health_url: "https://app.example.com:9000/healthz".into(),
+                ..Default::default()
+            }),
+            "https://app.example.com:9000/healthz"
+        );
+        // path override rewrites the path on the same origin
+        assert_eq!(
+            probe_target(&Route {
+                url: "https://app.example.com/dashboard".into(),
+                health_path: "/healthz".into(),
+                ..Default::default()
+            }),
+            "https://app.example.com/healthz"
+        );
+        // no override → url unchanged
+        assert_eq!(
+            probe_target(&Route {
+                url: "https://app.example.com/".into(),
+                ..Default::default()
+            }),
+            "https://app.example.com/"
+        );
     }
 }
