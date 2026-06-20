@@ -196,7 +196,7 @@ dependencies = [
  "http",
  "http-body",
  "matchit",
- "metrics",
+ "metrics 0.23.1",
  "metrics-exporter-prometheus",
  "once_cell",
  "pin-project",
@@ -1241,6 +1241,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "metrics"
+version = "0.24.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "89550ee9f79e88fef3119de263694973a8adb26c21d75322164fb8c493039fe2"
+dependencies = [
+ "portable-atomic",
+ "rapidhash",
+]
+
+[[package]]
 name = "metrics-exporter-prometheus"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1252,7 +1262,7 @@ dependencies = [
  "hyper-util",
  "indexmap",
  "ipnet",
- "metrics",
+ "metrics 0.23.1",
  "metrics-util",
  "quanta",
  "thiserror 1.0.69",
@@ -1269,7 +1279,7 @@ dependencies = [
  "crossbeam-epoch",
  "crossbeam-utils",
  "hashbrown 0.14.5",
- "metrics",
+ "metrics 0.23.1",
  "num_cpus",
  "quanta",
  "sketches-ddsketch",
@@ -1609,6 +1619,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "rapidhash"
+version = "4.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b5e48930979c155e2f33aa36ab3119b5ee81332beb6482199a8ecd6029b80b59"
+dependencies = [
+ "rustversion",
+]
+
+[[package]]
 name = "raw-cpuid"
 version = "11.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1759,7 +1778,7 @@ dependencies = [
  "indexmap",
  "k8s-openapi",
  "kube",
- "metrics",
+ "metrics 0.24.6",
  "reqwest",
  "rust-embed",
  "serde",
