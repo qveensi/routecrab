@@ -99,14 +99,56 @@ extraVolumes: []
 
 extraVolumeMounts: []
 
-# ─── Task 14 placeholders (templates not yet created) ───────────────────────
-# serviceMonitor:
-#   enabled: false
-# podMonitor:
-#   enabled: false
-# pdb:
-#   enabled: false
-# httpRoute:
-#   enabled: false
-# ingress:
-#   enabled: false
+# ─── Monitoring ──────────────────────────────────────────────────────────────
+
+serviceMonitor:
+  # Create a prometheus-operator ServiceMonitor (monitoring.coreos.com/v1).
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
+  # Extra labels merged into ServiceMonitor metadata (e.g. release: prometheus).
+  labels: {}
+  relabelings: []
+  metricRelabelings: []
+
+podMonitor:
+  # Create a prometheus-operator PodMonitor (monitoring.coreos.com/v1).
+  enabled: false
+  interval: 30s
+  # Extra labels merged into PodMonitor metadata.
+  labels: {}
+
+# ─── Availability ────────────────────────────────────────────────────────────
+
+pdb:
+  # Create a PodDisruptionBudget (policy/v1). Enabled by default.
+  enabled: true
+  minAvailable: 1
+  # maxUnavailable: 1  # Uncomment to use maxUnavailable instead of minAvailable.
+
+# ─── Exposure ────────────────────────────────────────────────────────────────
+
+httpRoute:
+  # Create a Gateway API HTTPRoute (gateway.networking.k8s.io/v1).
+  enabled: false
+  # parentRefs is a list of Gateway references, e.g.:
+  # - name: my-gateway
+  #   namespace: infra
+  parentRefs: []
+  # hostnames is a list of DNS names matched by the route, e.g.:
+  # - routecrab.example.com
+  hostnames: []
+  annotations: {}
+
+ingress:
+  # Create a networking.k8s.io/v1 Ingress.
+  enabled: false
+  className: ""
+  annotations: {}
+  # hosts:
+  #   - host: routecrab.example.com
+  #     paths:
+  #       - path: /
+  #         pathType: Prefix
+  hosts: []
+  tls: []
