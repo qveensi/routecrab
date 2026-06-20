@@ -198,7 +198,7 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
-      contents: read
+      contents: write
       packages: write
     steps:
       - name: Checkout repository
@@ -219,5 +219,52 @@ jobs:
 
       - name: Push Helm chart
         run: |
-          CHART_PKG=$(ls routecrab-*.tgz)
-          helm push "${CHART_PKG}" oci://ghcr.io/qveensi/charts
+          for pkg in routecrab-*.tgz; do
+            helm push "${pkg}" oci://ghcr.io/qveensi/charts
+          done
+
+      - name: Attach chart to GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for pkg in routecrab-*.tgz; do
+            gh release upload "$GITHUB_REF_NAME" "${pkg}" --clobber
+          done
+
+  # ---------------------------------------------------------------------------
+  # binaries: build native Linux binaries (gnu/glibc), attach to GitHub release
+  # ---------------------------------------------------------------------------
+  binaries:
+    name: Release binary (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build release binary
+        run: cargo build --release --locked --bin routecrab
+      - name: Package + checksum
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          BIN="routecrab-${VERSION}-linux-${{ matrix.arch }}"
+          cp target/release/routecrab "${BIN}"
+          sha256sum "${BIN}" > "${BIN}.sha256"
+      - name: Attach to GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          gh release upload "$GITHUB_REF_NAME" \
+            "routecrab-${VERSION}-linux-${{ matrix.arch }}" \
+            "routecrab-${VERSION}-linux-${{ matrix.arch }}.sha256" \
+            --clobber
