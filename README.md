@@ -76,6 +76,8 @@ Attach `routecrab.io/*` annotations to any `HTTPRoute` to control how it appears
 | `routecrab.io/order` | i32 | `0` | Sort order within a group (lower = earlier) |
 | `routecrab.io/hidden` | `"true"` | — | Set `"true"` to hide the route from the board |
 | `routecrab.io/health` | `"false"` | — | Set `"false"` to disable health monitoring for this route |
+| `routecrab.io/health-url` | string | — | Full URL to probe for health; overrides the public URL |
+| `routecrab.io/health-path` | string | — | Path to probe on the public URL's origin |
 
 Full reference: [docs/annotations.md](docs/annotations.md).
 
@@ -96,6 +98,9 @@ routecrab is configured entirely through environment variables.
 | `ROUTECRAB_NAMESPACE_ALLOWLIST` | _(empty = all)_ | Comma-separated namespace allowlist |
 | `ROUTECRAB_NAMESPACE_DENYLIST` | `kube-system,kube-public,kube-node-lease` | Comma-separated namespace denylist |
 | `ROUTECRAB_RESYNC_INTERVAL` | `1800s` | **Reserved (not yet honored).** Parsed but not wired to the watcher. |
+| `ROUTECRAB_METRICS_ENABLED` | `true` | Serve Prometheus `/metrics` on the dedicated metrics port |
+| `ROUTECRAB_METRICS_PORT` | `9090` | Port for the metrics listener (separate from the app port) |
+| `ROUTECRAB_METRICS_ADDRESS` | `0.0.0.0` | Bind address for the metrics listener |
 
 Full reference: [docs/configuration.md](docs/configuration.md).
 
@@ -105,13 +110,20 @@ The Helm chart creates a `ClusterRole` and `ClusterRoleBinding` that grant `list
 
 ## Endpoints
 
+**Board & API (default port `8080`, `ROUTECRAB_*`)**
+
 | Path | Method | Description |
 |---|---|---|
-| `/` | GET | HTML dashboard board (htmx + SSE) |
+| `/` | GET | HTML dashboard board (htmx + SSE); live-refreshes on any discovery/annotation/health change |
 | `/api/routes` | GET | JSON array of all non-hidden routes |
 | `/events` | GET | SSE stream for live board updates |
-| `/metrics` | GET | Prometheus text exposition |
 | `/healthz` | GET | Liveness/readiness probe — returns `200 ok` |
+
+**Metrics (separate port `9090`, `ROUTECRAB_METRICS_*`)**
+
+| Path | Method | Description |
+|---|---|---|
+| `/metrics` | GET | Prometheus text exposition (served on dedicated metrics port; disable with `ROUTECRAB_METRICS_ENABLED=false`) |
 
 ## Image
 
