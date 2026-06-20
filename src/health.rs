@@ -17,10 +17,14 @@ pub fn classify(status: Option<u16>, elapsed: Duration, degraded_after: Duration
     }
 }
 
-/// Return true if a route should be probed: must have a non-empty URL and
-/// must not have monitoring explicitly disabled.
+/// Return true if a route should be probed.
+/// A route is eligible when it has either a non-empty public URL or an
+/// explicit health_url override (the internal-healthz use case), and
+/// monitoring has not been disabled.
+/// Note: `health_path` alone with an empty `url` stays ineligible — the path
+/// requires a base origin to resolve and `probe_target` would return "".
 pub fn should_check(r: &Route) -> bool {
-    !r.url.is_empty() && !r.monitor_disabled
+    (!r.url.is_empty() || !r.health_url.is_empty()) && !r.monitor_disabled
 }
 
 /// Resolve the URL to probe for a route.
@@ -122,6 +126,29 @@ mod tests {
         }));
         assert!(should_check(&Route {
             url: "http://x".into(),
+            ..Default::default()
+        }));
+    }
+
+    #[test]
+    fn checks_health_url_only_route() {
+        // Only health_url set, empty public url → still eligible.
+        assert!(should_check(&Route {
+            url: "".into(),
+            health_url: "https://internal/healthz".into(),
+            ..Default::default()
+        }));
+        // monitor disabled still wins.
+        assert!(!should_check(&Route {
+            url: "".into(),
+            health_url: "https://internal/healthz".into(),
+            monitor_disabled: true,
+            ..Default::default()
+        }));
+        // empty url + only health_path → still skipped (no base origin).
+        assert!(!should_check(&Route {
+            url: "".into(),
+            health_path: "/healthz".into(),
             ..Default::default()
         }));
     }
