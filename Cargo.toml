@@ -33,6 +33,7 @@ metrics = "0.23"
 askama = "0.14.0"
 tokio-stream = { version = "0.1", features = ["sync"] }
 rust-embed = { version = "8.11.0", features = ["interpolate-folder-path", "include-exclude"] }
+async-stream = "0.3"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

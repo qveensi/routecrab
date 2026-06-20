@@ -66,6 +66,13 @@ struct IndexTemplate<'a> {
     groups: RouteGroups,
 }
 
+#[derive(Template)]
+#[template(path = "_board.html")]
+struct BoardTemplate<'a> {
+    query: &'a str,
+    groups: RouteGroups,
+}
+
 // ── Query params ──────────────────────────────────────────────────────────
 
 #[derive(Deserialize, Default)]
@@ -84,13 +91,10 @@ pub struct PageState {
 
 // ── Index handler ─────────────────────────────────────────────────────────
 
-pub async fn index(
-    State(state): State<PageState>,
-    Query(params): Query<BoardQuery>,
-) -> Result<Html<String>, StatusCode> {
-    let q = params.q.trim().to_lowercase();
-    let routes: Vec<Route> = state
-        .store
+/// Filter (hidden + search), resolve icons, and group routes for rendering.
+pub fn build_groups(store: &Store, query: &str) -> RouteGroups {
+    let q = query.trim().to_lowercase();
+    let routes_with_icons: Vec<RouteWithIcon> = store
         .list()
         .into_iter()
         .filter(|r| !r.hidden)
@@ -102,26 +106,33 @@ pub async fn index(
                 || r.display_title().to_lowercase().contains(&q)
                 || r.description.to_lowercase().contains(&q)
         })
-        .collect();
-
-    // Resolve icons per route, then group.
-    let routes_with_icons: Vec<RouteWithIcon> = routes
-        .into_iter()
         .map(|r| {
             let svg = icon_for(&r.name, &r.icon);
             (r, svg)
         })
         .collect();
+    group_routes_with_icons(routes_with_icons)
+}
 
-    // Already sorted by (group, order, name) from store.list(); just group.
-    let groups = group_routes_with_icons(routes_with_icons);
+/// Render the full (unfiltered) board inner HTML — used by the SSE refresh.
+/// Returns an empty string on render error (logged by the caller path).
+pub fn render_board(store: &Store) -> String {
+    let groups = build_groups(store, "");
+    BoardTemplate { query: "", groups }
+        .render()
+        .unwrap_or_default()
+}
 
+pub async fn index(
+    State(state): State<PageState>,
+    Query(params): Query<BoardQuery>,
+) -> Result<Html<String>, StatusCode> {
+    let groups = build_groups(&state.store, &params.q);
     let tmpl = IndexTemplate {
         title: &state.title,
         query: params.q.trim(),
         groups,
     };
-
     tmpl.render()
         .map(Html)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)

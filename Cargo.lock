@@ -1749,6 +1749,7 @@ name = "routecrab"
 version = "0.1.0"
 dependencies = [
  "askama",
+ "async-stream",
  "axum",
  "axum-prometheus",
  "futures",

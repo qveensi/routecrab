@@ -22,6 +22,8 @@ pub struct Route {
     pub name: String,
     pub namespace: String,
     pub url: String,
+    pub health_url: String,
+    pub health_path: String,
     pub title: String,
     pub description: String,
     pub group: String,
@@ -65,6 +67,8 @@ impl Route {
                     "group" => self.group = value.clone(),
                     "icon" => self.icon = value.clone(),
                     "url" => self.url = value.clone(),
+                    "health-url" => self.health_url = value.clone(),
+                    "health-path" => self.health_path = value.clone(),
                     "order" => {
                         if let Ok(order_val) = value.parse::<i32>() {
                             self.order = order_val;
@@ -111,5 +115,19 @@ mod tests {
         r.apply_annotations(&a);
         assert!(r.hidden);
         assert_eq!(r.group, "infra");
+    }
+
+    #[test]
+    fn health_url_and_path_annotations() {
+        let mut r = Route::default();
+        let mut a = std::collections::BTreeMap::new();
+        a.insert(
+            "routecrab.io/health-url".into(),
+            "https://svc/internal/health".into(),
+        );
+        a.insert("routecrab.io/health-path".into(), "/healthz".into());
+        r.apply_annotations(&a);
+        assert_eq!(r.health_url, "https://svc/internal/health");
+        assert_eq!(r.health_path, "/healthz");
     }
 }

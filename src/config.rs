@@ -15,6 +15,9 @@ pub struct Config {
     pub namespace_denylist: Vec<String>,
     // NOTE: currently reserved — the kube-rs watcher uses its default relist behaviour; this knob is not yet honored.
     pub resync_interval: Duration,
+    pub metrics_enabled: bool,
+    pub metrics_port: u16,
+    pub metrics_address: String,
 }
 
 impl Default for Config {
@@ -69,6 +72,9 @@ impl Config {
                 "ROUTECRAB_RESYNC_INTERVAL",
                 Duration::from_secs(1800),
             ), // 30m
+            metrics_enabled: env_bool(vars_map, "ROUTECRAB_METRICS_ENABLED", true),
+            metrics_port: env_u16(vars_map, "ROUTECRAB_METRICS_PORT", 9090),
+            metrics_address: env_str(vars_map, "ROUTECRAB_METRICS_ADDRESS", "0.0.0.0"),
         }
     }
 }
@@ -145,5 +151,20 @@ mod tests {
     fn json_format_from_env() {
         let c = Config::from_iter([("ROUTECRAB_LOG_FORMAT".to_string(), "json".to_string())]);
         assert_eq!(c.log_format, "json");
+    }
+
+    #[test]
+    fn metrics_defaults_and_override() {
+        let c = Config::from_iter(std::iter::empty());
+        assert!(c.metrics_enabled);
+        assert_eq!(c.metrics_port, 9090);
+        assert_eq!(c.metrics_address, "0.0.0.0");
+
+        let c = Config::from_iter([
+            ("ROUTECRAB_METRICS_ENABLED".to_string(), "false".to_string()),
+            ("ROUTECRAB_METRICS_PORT".to_string(), "9100".to_string()),
+        ]);
+        assert!(!c.metrics_enabled);
+        assert_eq!(c.metrics_port, 9100);
     }
 }

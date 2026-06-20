@@ -17,10 +17,31 @@ pub fn classify(status: Option<u16>, elapsed: Duration, degraded_after: Duration
     }
 }
 
-/// Return true if a route should be probed: must have a non-empty URL and
-/// must not have monitoring explicitly disabled.
+/// Return true if a route should be probed.
+/// A route is eligible when it has either a non-empty public URL or an
+/// explicit health_url override (the internal-healthz use case), and
+/// monitoring has not been disabled.
+/// Note: `health_path` alone with an empty `url` stays ineligible — the path
+/// requires a base origin to resolve and `probe_target` would return "".
 pub fn should_check(r: &Route) -> bool {
-    !r.url.is_empty() && !r.monitor_disabled
+    (!r.url.is_empty() || !r.health_url.is_empty()) && !r.monitor_disabled
+}
+
+/// Resolve the URL to probe for a route.
+/// Precedence: `health_url` (full override) > `health_path` (path on the
+/// route URL's origin) > `url` (the public URL itself).
+pub fn probe_target(r: &Route) -> String {
+    if !r.health_url.is_empty() {
+        return r.health_url.clone();
+    }
+    if !r.health_path.is_empty() {
+        if let Ok(mut u) = reqwest::Url::parse(&r.url) {
+            u.set_path(&r.health_path);
+            u.set_query(None);
+            return u.to_string();
+        }
+    }
+    r.url.clone()
 }
 
 /// Run the health-check loop. Returns immediately when health checking is
@@ -51,9 +72,10 @@ pub async fn run(store: crate::store::Store, cfg: crate::config::Config) {
                 continue;
             }
 
+            let target = probe_target(&route);
             let start = tokio::time::Instant::now();
             let status_code = client
-                .head(&route.url)
+                .head(&target)
                 .send()
                 .await
                 .ok()
@@ -106,5 +128,58 @@ mod tests {
             url: "http://x".into(),
             ..Default::default()
         }));
+    }
+
+    #[test]
+    fn checks_health_url_only_route() {
+        // Only health_url set, empty public url → still eligible.
+        assert!(should_check(&Route {
+            url: "".into(),
+            health_url: "https://internal/healthz".into(),
+            ..Default::default()
+        }));
+        // monitor disabled still wins.
+        assert!(!should_check(&Route {
+            url: "".into(),
+            health_url: "https://internal/healthz".into(),
+            monitor_disabled: true,
+            ..Default::default()
+        }));
+        // empty url + only health_path → still skipped (no base origin).
+        assert!(!should_check(&Route {
+            url: "".into(),
+            health_path: "/healthz".into(),
+            ..Default::default()
+        }));
+    }
+
+    #[test]
+    fn probe_target_precedence() {
+        // full override wins
+        assert_eq!(
+            probe_target(&Route {
+                url: "https://app.example.com/".into(),
+                health_url: "https://app.example.com:9000/healthz".into(),
+                ..Default::default()
+            }),
+            "https://app.example.com:9000/healthz"
+        );
+        // path override rewrites the path on the same origin
+        assert_eq!(
+            probe_target(&Route {
+                url: "https://app.example.com/dashboard".into(),
+                health_path: "/healthz".into(),
+                ..Default::default()
+            }),
+            "https://app.example.com/healthz"
+        );
+        // no override → url unchanged
+        assert_eq!(
+            probe_target(&Route {
+                url: "https://app.example.com/".into(),
+                ..Default::default()
+            }),
+            "https://app.example.com/"
+        );
     }
 }

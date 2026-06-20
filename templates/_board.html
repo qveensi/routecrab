@@ -1,0 +1,28 @@
+{% if groups.is_empty() %}
+  <div class="no-results">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+    {% if !query.is_empty() %}
+      <h2>No matching routes</h2>
+      <p>Nothing matched <code>{{ query }}</code>. Try a different service, title, or description.</p>
+    {% else %}
+      <h2>No routes discovered</h2>
+      <p>routecrab hasn't found any Gateway API HTTPRoutes in the cluster yet. They'll appear here automatically.</p>
+    {% endif %}
+  </div>
+{% else %}
+  {% for (group_name, routes) in groups %}
+    <section class="group">
+      {% if !group_name.is_empty() %}
+        <div class="group-head">
+          <h2 class="group-heading">{{ group_name }}</h2>
+          <span class="group-meta" aria-hidden="true"></span>
+        </div>
+      {% endif %}
+      <div class="card-grid">
+        {% for (route, icon_svg) in routes %}
+          {% include "_card.html" %}
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+{% endif %}

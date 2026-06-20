@@ -16,6 +16,8 @@ Annotations are applied at discovery time. Changes take effect on the next watch
 | `routecrab.io/order` | i32 | `0` | Sort order within a group. Cards are sorted ascending by order, then by name. Non-integer values are silently ignored and the default (`0`) is kept. |
 | `routecrab.io/hidden` | string | _(not hidden)_ | Set to `"true"` to hide this route from the board entirely. Any other value (including absent) leaves the route visible. |
 | `routecrab.io/health` | string | _(monitoring enabled)_ | Set to `"false"` to disable health monitoring for this route. The route still appears on the board with `unknown` health status. Any other value leaves monitoring enabled. |
+| `routecrab.io/health-url` | string | _(empty)_ | Full URL to probe for health instead of the public URL (e.g. an internal `/healthz`). Highest precedence. |
+| `routecrab.io/health-path` | string | _(empty)_ | Path to probe on the public URL's origin (e.g. `/healthz`). Used when `health-url` is unset. |
 
 ## Icon Rendering Note
 
