@@ -1,4 +1,5 @@
-use askama::Template;
+use std::{convert::Infallible, time::Duration};
+
 use axum::{
     extract::State,
     response::{
@@ -6,63 +7,49 @@ use axum::{
         IntoResponse,
     },
 };
-use futures::StreamExt;
-use tokio_stream::wrappers::BroadcastStream;
+use tokio::sync::broadcast::error::RecvError;
 
-use crate::{
-    store::{Change, Store},
-    web::card::CardTemplate,
-};
+use crate::{store::Store, web::pages::render_board};
 
-// ── SSE handler ───────────────────────────────────────────────────────────
+/// Coalesce window: bursts of changes (e.g. the watcher's initial list) collapse
+/// into a single board re-render.
+const DEBOUNCE: Duration = Duration::from_millis(300);
 
-/// Stream store changes as Server-Sent Events.
-///
-/// Event design:
-/// - `route-update`: data = rendered `_card.html` fragment with
-///   `hx-swap-oob="outerHTML:#route-{id}"` so htmx replaces the card in place.
-/// - `route-remove`: data = minimal sentinel fragment with
-///   `hx-swap-oob="delete:#route-{id}"` so htmx removes the card element.
-///
-/// The client subscribes via `hx-ext="sse" sse-connect="/events"` on the
-/// board container; each card listens with `sse-swap="route-update"` — but
-/// since we use OOB swaps the board container itself does not need to be the
-/// swap target; the OOB attribute handles targeting directly.
+/// Render the current board wrapped as an htmx OOB innerHTML swap of `#board`.
+/// innerHTML (not outerHTML) preserves the `#board` element and its live SSE
+/// connection while replacing all groups/cards — so new, removed, moved,
+/// re-sorted, and hidden routes are all reflected correctly.
+fn board_event(store: &Store) -> Event {
+    let board = render_board(store);
+    let data = format!(r#"<div hx-swap-oob="innerHTML:#board">{board}</div>"#);
+    Event::default().event("board-refresh").data(data)
+}
+
+/// Stream a full board refresh on connect, then a debounced refresh after any
+/// store change.
 pub async fn sse_handler(State(store): State<Store>) -> impl IntoResponse {
-    let rx = store.subscribe();
-    let stream = BroadcastStream::new(rx).filter_map(|msg| async move {
-        match msg {
-            // Lagged means we missed some messages; skip and continue streaming.
-            Err(_) => None,
+    let mut rx = store.subscribe();
+    let stream = async_stream::stream! {
+        // Initial paint so a freshly-connected client is immediately consistent.
+        yield Ok::<Event, Infallible>(board_event(&store));
 
-            Ok(Change::Upsert(route)) => {
-                let html = CardTemplate::for_route(&route).render().unwrap_or_default();
-                // Inject the OOB swap attribute into the outer <div> tag.
-                // The card template root is `<div class="card" id="route-{id}">`;
-                // we prepend the hx-swap-oob attribute so htmx targets it by id.
-                let oob = format!(r#"hx-swap-oob="outerHTML:#route-{}""#, route.id);
-                // Insert the oob attribute right after the opening `<div`
-                let fragment = if let Some(pos) = html.find("<div") {
-                    let after_div = pos + 4; // length of "<div"
-                    format!("{}<div {} {}", &html[..pos], oob, &html[after_div..])
-                } else {
-                    html
-                };
-
-                Some(Ok::<Event, std::convert::Infallible>(
-                    Event::default().event("route-update").data(fragment),
-                ))
+        while let Ok(_) | Err(RecvError::Lagged(_)) = rx.recv().await {
+            // Drain further changes for DEBOUNCE, then emit once.
+            let sleep = tokio::time::sleep(DEBOUNCE);
+            tokio::pin!(sleep);
+            let mut closed = false;
+            loop {
+                tokio::select! {
+                    _ = &mut sleep => break,
+                    r = rx.recv() => {
+                        if matches!(r, Err(RecvError::Closed)) { closed = true; break; }
+                    }
+                }
             }
-
-            Ok(Change::Remove(id)) => {
-                // Empty div with delete OOB swap removes the card from the DOM.
-                let fragment = format!(r#"<div id="route-{}" hx-swap-oob="delete"></div>"#, id);
-                Some(Ok::<Event, std::convert::Infallible>(
-                    Event::default().event("route-remove").data(fragment),
-                ))
-            }
+            yield Ok(board_event(&store));
+            if closed { break; }
         }
-    });
+    };
 
     Sse::new(stream).keep_alive(KeepAlive::default())
 }
