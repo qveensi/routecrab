@@ -59,7 +59,7 @@ type RouteWithIcon = (Route, String);
 type RouteGroups = Vec<(String, Vec<RouteWithIcon>)>;
 
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
-const APP_YEAR: &str = "2026";
+const APP_YEAR: &str = env!("ROUTECRAB_BUILD_YEAR");
 
 #[derive(Template)]
 #[template(path = "index.html")]

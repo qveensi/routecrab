@@ -90,7 +90,7 @@ mod tests {
             ..Default::default()
         });
 
-        let (layer, _handle) = axum_prometheus::PrometheusMetricLayer::pair();
+        let (layer, metrics_handle) = axum_prometheus::PrometheusMetricLayer::pair();
         let app = router(store.clone(), Config::default(), layer);
 
         // healthz
@@ -108,6 +108,12 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(res.status(), 200, "api/routes must be 200");
+        let body = res.into_body().collect().await.unwrap().to_bytes();
+        let body_str = String::from_utf8_lossy(&body);
+        assert!(
+            body_str.contains("my-awesome-service"),
+            "api/routes body must contain the visible route name"
+        );
 
         // GET / returns html containing a route name
         let res = app
@@ -172,6 +178,22 @@ mod tests {
         assert!(
             ct.starts_with("text/event-stream"),
             "/events must serve text/event-stream, got: {ct}"
+        );
+
+        // GET /metrics returns 200 and exposes routecrab_routes_total gauge.
+        // Reuse metrics_handle from the single pair() call above — never call pair() twice.
+        crate::observability::update_route_gauges(&store.list());
+        let metrics_app = crate::web::metrics_router(metrics_handle);
+        let res = metrics_app
+            .oneshot(Request::get("/metrics").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(res.status(), 200, "/metrics must be 200");
+        let body = res.into_body().collect().await.unwrap().to_bytes();
+        let body_str = String::from_utf8_lossy(&body);
+        assert!(
+            body_str.contains("routecrab_routes_total"),
+            "/metrics must expose routecrab_routes_total gauge"
         );
     }
 

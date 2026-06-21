@@ -33,12 +33,18 @@ async fn main() {
             }
             Err(e) => tracing::error!("cannot bind metrics {metrics_addr}: {e}"),
         }
+    } else {
+        tracing::info!("metrics endpoint disabled (ROUTECRAB_METRICS_ENABLED=false)");
     }
 
     let bind_addr = format!("{}:{}", cfg.address, cfg.port);
-    let listener = tokio::net::TcpListener::bind(&bind_addr)
-        .await
-        .unwrap_or_else(|e| panic!("cannot bind {bind_addr}: {e}"));
+    let listener = match tokio::net::TcpListener::bind(&bind_addr).await {
+        Ok(l) => l,
+        Err(e) => {
+            tracing::error!("cannot bind {bind_addr}: {e}");
+            std::process::exit(1);
+        }
+    };
 
     tracing::info!(
         address = %bind_addr,

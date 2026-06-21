@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 #[derive(Clone, Debug)]
-#[allow(dead_code)]
 pub struct Config {
     pub port: u16,
     pub address: String,
@@ -13,8 +12,6 @@ pub struct Config {
     pub health_timeout: Duration,
     pub namespace_allowlist: Vec<String>,
     pub namespace_denylist: Vec<String>,
-    // NOTE: currently reserved — the kube-rs watcher uses its default relist behaviour; this knob is not yet honored.
-    pub resync_interval: Duration,
     pub metrics_enabled: bool,
     pub metrics_port: u16,
     pub metrics_address: String,
@@ -30,14 +27,12 @@ impl Config {
     /// Parse configuration from an iterable of key-value pairs (e.g., from std::env::vars()).
     /// Unknown keys are ignored. Falls back to defaults when values are missing or unparseable.
     #[allow(clippy::should_implement_trait)]
-    #[allow(dead_code)]
     pub fn from_iter<I: IntoIterator<Item = (String, String)>>(vars: I) -> Config {
         let vars_map: std::collections::HashMap<String, String> = vars.into_iter().collect();
         Config::from_map(&vars_map)
     }
 
     /// Load configuration from the process environment.
-    #[allow(dead_code)]
     pub fn from_env() -> Config {
         Config::from_iter(std::env::vars())
     }
@@ -67,11 +62,6 @@ impl Config {
                     "kube-node-lease".to_string(),
                 ],
             ),
-            resync_interval: env_dur(
-                vars_map,
-                "ROUTECRAB_RESYNC_INTERVAL",
-                Duration::from_secs(1800),
-            ), // 30m
             metrics_enabled: env_bool(vars_map, "ROUTECRAB_METRICS_ENABLED", true),
             metrics_port: env_u16(vars_map, "ROUTECRAB_METRICS_PORT", 9090),
             metrics_address: env_str(vars_map, "ROUTECRAB_METRICS_ADDRESS", "0.0.0.0"),
@@ -80,7 +70,6 @@ impl Config {
 }
 
 /// Parse a string environment variable into a u16, fallback to default on failure.
-#[allow(dead_code)]
 fn env_u16(vars: &std::collections::HashMap<String, String>, key: &str, default: u16) -> u16 {
     vars.get(key)
         .and_then(|v| v.parse::<u16>().ok())
@@ -88,7 +77,6 @@ fn env_u16(vars: &std::collections::HashMap<String, String>, key: &str, default:
 }
 
 /// Parse a string environment variable, fallback to default on missing.
-#[allow(dead_code)]
 fn env_str(vars: &std::collections::HashMap<String, String>, key: &str, default: &str) -> String {
     vars.get(key)
         .cloned()
@@ -96,7 +84,6 @@ fn env_str(vars: &std::collections::HashMap<String, String>, key: &str, default:
 }
 
 /// Parse a boolean environment variable. "true" (case-insensitive) is true, else false. Fallback to default on missing.
-#[allow(dead_code)]
 fn env_bool(vars: &std::collections::HashMap<String, String>, key: &str, default: bool) -> bool {
     vars.get(key)
         .map(|v| v.to_lowercase() == "true")
@@ -104,7 +91,6 @@ fn env_bool(vars: &std::collections::HashMap<String, String>, key: &str, default
 }
 
 /// Parse a duration environment variable using humantime::parse_duration. Fallback to default on failure.
-#[allow(dead_code)]
 fn env_dur(
     vars: &std::collections::HashMap<String, String>,
     key: &str,
@@ -116,7 +102,6 @@ fn env_dur(
 }
 
 /// Parse a comma-separated list of strings. Splits on ',', trims, and drops empty values.
-#[allow(dead_code)]
 fn env_csv(
     vars: &std::collections::HashMap<String, String>,
     key: &str,
