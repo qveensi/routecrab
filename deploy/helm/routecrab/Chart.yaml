@@ -30,3 +30,10 @@ annotations:
       platforms:
         - linux/amd64
         - linux/arm64
+  artifacthub.io/screenshots: |
+    - title: Dashboard (dark)
+      url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/hero-dark.png
+    - title: Dashboard (light)
+      url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/hero-light.png
+    - title: List view
+      url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/list-view.png
