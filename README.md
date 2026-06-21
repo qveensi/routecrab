@@ -30,6 +30,24 @@ Most route dashboards require static configuration. routecrab uses the Gateway A
 - **Distroless image** — runs as nonroot uid 65532; chart enforces PSS-restricted policy.
 - **Helm chart** — includes RBAC, optional ServiceMonitor/PodMonitor, PodDisruptionBudget, HTTPRoute, and Ingress toggles.
 
+## How it works
+
+```
+HTTPRoutes (Gateway API)          routecrab
+┌────────────────────┐     ┌──────────────────────────────┐     browser
+│  kube-apiserver     │     │  watch ─▶ in-memory store     │   ┌─────────┐
+│  gateway.networking │◀────│    │           │             │   │  board  │
+│  .k8s.io/httproutes │watch│    ▼           ▼             │   │ (htmx)  │
+└────────────────────┘     │  health loop   SSE /events ──┼──▶│  live   │
+                            │  (HEAD probes) (push render)  │   └─────────┘
+                            └──────────────────────────────┘
+```
+
+1. **Watch** — a kube-rs watcher streams `HTTPRoute` add/modify/delete events cluster-wide (filtered by the namespace allow/deny lists).
+2. **Store** — each route is reduced to a card model (URL, title, group, icon… from `routecrab.io/*` annotations) and kept in an in-memory store. Every change broadcasts to subscribers.
+3. **Health loop** — a background task periodically HEAD-probes each eligible route and classifies it `healthy` / `degraded` / `unhealthy`.
+4. **Serve** — the board is plain HTML (htmx); an SSE stream (`/events`) pushes a re-rendered board to open tabs on any discovery, annotation, or health change — no client polling. Metrics are served on a separate port.
+
 ## Quick Start
 
 ### Helm (OCI chart)
@@ -121,7 +139,7 @@ routecrab is configured entirely through environment variables.
 | `ROUTECRAB_PORT` | `8080` | TCP port to listen on |
 | `ROUTECRAB_ADDRESS` | `0.0.0.0` | Bind address |
 | `ROUTECRAB_TITLE` | `routecrab` | Dashboard title shown in the header |
-| `ROUTECRAB_LOG_LEVEL` | `info` | Log level (`trace`, `debug`, `info`, `warn`, `error`) |
+| `ROUTECRAB_LOG_LEVEL` | `info` | Log level (`trace`, `debug`, `info`, `warn`, `error`); overridden by `RUST_LOG` when set |
 | `ROUTECRAB_LOG_FORMAT` | `text` | Log format (`text` or `json`) |
 | `ROUTECRAB_HEALTH_ENABLED` | `true` | Enable background health checking |
 | `ROUTECRAB_HEALTH_INTERVAL` | `30s` | Interval between health checks (humantime, e.g. `30s`, `5m`) |
@@ -181,6 +199,13 @@ cosign verify ghcr.io/qveensi/helm/routecrab:<version> \
   --certificate-identity-regexp "$IDENTITY" \
   --certificate-oidc-issuer "$ISSUER"
 ```
+
+## Project
+
+- [Contributing guide](CONTRIBUTING.md) — dev setup, tests, and the PR workflow
+- [Security policy](SECURITY.md) — how to report a vulnerability privately
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Changelog](CHANGELOG.md) — release history
 
 ## License
 
