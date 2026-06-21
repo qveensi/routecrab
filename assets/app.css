@@ -539,8 +539,8 @@ a { color: var(--accent); text-decoration: none; }
 .footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  justify-content: center;
+  gap: .7rem;
   max-width: 1640px;
   margin: 0 auto;
   padding: .9rem 1.25rem;
