@@ -215,7 +215,11 @@ jobs:
               --password-stdin
 
       - name: Package Helm chart
-        run: helm package deploy/helm/routecrab
+        # Drive chart version + appVersion from the release tag so the published
+        # chart always matches the image (release-plz bumps Cargo, not Chart.yaml).
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          helm package deploy/helm/routecrab --version "$version" --app-version "$version"
 
       - name: Push Helm chart
         run: |
