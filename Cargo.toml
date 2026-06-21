@@ -50,6 +50,7 @@ async-stream = "0.3"
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
 http-body-util = "0.1"
+proptest = "1"
 
 [profile.release]
 opt-level = "s"
