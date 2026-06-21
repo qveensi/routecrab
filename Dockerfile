@@ -1,11 +1,20 @@
 # syntax=docker/dockerfile:1
 
 # ── Builder ──────────────────────────────────────────────────────────────────
-# rust:1.85 is the declared MSRV, but locked deps (kube 3.1.0 / darling 0.23.0)
-# require rustc >= 1.88.0; use that version to match the lock-file.
-FROM rust:1.88-bookworm AS builder
+# cargo-zigbuild uses Zig as the C cross-linker, which produces portable musl
+# static binaries without the cmake/aws-lc pain.  ring (our TLS backend)
+# supports musl cleanly, so fully-static linking works here.
+FROM --platform=$BUILDPLATFORM ghcr.io/rust-cross/cargo-zigbuild:0.21.4 AS builder
 
 WORKDIR /build
+
+# Resolve the musl target triple from Docker's TARGETARCH arg.
+ARG TARGETARCH
+RUN case "$TARGETARCH" in \
+      amd64) T=x86_64-unknown-linux-musl ;; \
+      arm64) T=aarch64-unknown-linux-musl ;; \
+      *) echo "unsupported arch: $TARGETARCH" >&2; exit 1 ;; \
+    esac; echo "$T" > /tgt && rustup target add "$T"
 
 # Cache dependency compilation: copy manifests first, stub out the library and
 # binary entry-points, then fetch+compile deps in isolation.  Subsequent builds
@@ -22,20 +31,22 @@ COPY templates/ ./templates/
 RUN mkdir -p src && \
     echo "pub fn main() {}" > src/lib.rs && \
     echo "fn main() {}" > src/main.rs && \
-    cargo build --release && \
+    cargo zigbuild --release --target "$(cat /tgt)" && \
     rm -rf src
 
 # Now bring in the real source and do the final build.
 COPY src/ ./src/
 
-# Touch main.rs so Cargo detects a change and relinks.
+# Touch entry-points so Cargo detects a change and relinks against real source.
 RUN touch src/main.rs src/lib.rs && \
-    cargo build --release
+    cargo zigbuild --release --target "$(cat /tgt)" && \
+    cp "target/$(cat /tgt)/release/routecrab" /routecrab
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
-FROM gcr.io/distroless/cc-debian12:nonroot
+# distroless/static has no glibc — the binary must be fully statically linked.
+FROM gcr.io/distroless/static-debian12:nonroot
 
-COPY --from=builder /build/target/release/routecrab /routecrab
+COPY --from=builder /routecrab /routecrab
 
 USER nonroot
 

@@ -38,3 +38,11 @@ async-stream = "0.3"
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
 http-body-util = "0.1"
+
+[profile.release]
+opt-level = "s"
+lto = "fat"
+codegen-units = 1
+strip = true
+# panic = "abort" intentionally NOT set — keep unwinding so a panicking handler
+# doesn't kill the whole server process.
