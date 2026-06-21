@@ -14,6 +14,18 @@ path = "src/lib.rs"
 name = "routecrab"
 path = "src/main.rs"
 
+# cargo-binstall: pull a prebuilt binary from the GitHub release instead of
+# compiling. Release assets are raw (un-archived) glibc binaries named
+# routecrab-<version>-linux-<amd64|arm64>; map the Rust target triples to them.
+[package.metadata.binstall]
+pkg-fmt = "bin"
+
+[package.metadata.binstall.overrides.x86_64-unknown-linux-gnu]
+pkg-url = "{ repo }/releases/download/v{ version }/routecrab-{ version }-linux-amd64"
+
+[package.metadata.binstall.overrides.aarch64-unknown-linux-gnu]
+pkg-url = "{ repo }/releases/download/v{ version }/routecrab-{ version }-linux-arm64"
+
 [dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time"] }
 axum = "0.8"
