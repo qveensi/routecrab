@@ -11,3 +11,17 @@ sources:
   - https://github.com/qveensi/routecrab
 # Requires Gateway API CRDs (gateway.networking.k8s.io) to be present.
 kubeVersion: ">=1.25.0-0"
+annotations:
+  artifacthub.io/license: MIT
+  artifacthub.io/category: monitoring-logging
+  artifacthub.io/links: |
+    - name: source
+      url: https://github.com/qveensi/routecrab
+    - name: support
+      url: https://github.com/qveensi/routecrab/issues
+  artifacthub.io/maintainers: |
+    - name: Yevhenii Huzii
+      email: yevhenii.huzii@gmail.com
+  artifacthub.io/images: |
+    - name: routecrab
+      image: ghcr.io/qveensi/routecrab:latest
