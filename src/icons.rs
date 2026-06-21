@@ -46,11 +46,31 @@ fn slugify(name: &str) -> String {
         .collect()
 }
 
+/// Map common service-name slugs to the canonical vendored Simple Icons slug.
+/// Each target MUST exist in `assets/icons/`.
+fn canonical_slug(slug: &str) -> &str {
+    match slug {
+        "argocd" => "argo",
+        "k8s" => "kubernetes",
+        "postgres" => "postgresql",
+        "kafka" => "apachekafka",
+        "traefik" => "traefikproxy",
+        "nats" => "natsdotio",
+        "vaultproject" => "vault",
+        "sonarqube" => "sonar",
+        // VictoriaMetrics suite (logs / vmui variants) share one brand icon.
+        "victorialogs" | "victorialogsvmui" | "victoriametricsvmui" => "victoriametrics",
+        other => other,
+    }
+}
+
 /// Return the embedded SVG for a service icon.
 ///
 /// Resolution order:
 /// 1. `override_slug` if non-empty (lowercased for case-insensitive lookup).
 /// 2. `name` slugified (lowercase, `.` → `dot`, `+` → `plus`, non-alphanumeric stripped).
+///
+/// The resolved slug is then mapped through `canonical_slug` (e.g. `argocd` → `argo`).
 ///
 /// Returns `None` when no matching icon is vendored.
 pub fn icon_for(name: &str, override_slug: &str) -> Option<&'static str> {
@@ -59,7 +79,7 @@ pub fn icon_for(name: &str, override_slug: &str) -> Option<&'static str> {
     } else {
         override_slug.to_lowercase()
     };
-    icon_index().get(&slug).copied()
+    icon_index().get(canonical_slug(&slug)).copied()
 }
 
 #[cfg(test)]
@@ -79,6 +99,32 @@ mod tests {
     #[test]
     fn unknown_icon_returns_none() {
         assert_eq!(icon_for("definitely-not-a-real-icon", ""), None);
+    }
+
+    #[test]
+    fn alias_resolves_argocd_to_argo() {
+        // "argocd" slugifies to "argocd" but the vendored file is "argo.svg";
+        // the alias map must bridge it.
+        let svg = icon_for("argocd", "").expect("argocd should resolve via alias to argo");
+        assert!(svg.contains("<svg"));
+    }
+
+    #[test]
+    fn newly_vendored_and_victoria_variants_resolve() {
+        // Directly vendored brands.
+        for name in ["fusionauth", "metabase", "rustfs", "victoriametrics"] {
+            assert!(
+                icon_for(name, "").is_some(),
+                "{name} icon should be vendored"
+            );
+        }
+        // VictoriaMetrics suite variants alias to the victoriametrics icon.
+        for name in ["victorialogs-vmui", "victoriametrics-vmui", "victorialogs"] {
+            assert!(
+                icon_for(name, "").is_some(),
+                "{name} should alias to victoriametrics"
+            );
+        }
     }
 
     #[test]

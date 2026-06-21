@@ -1,4 +1,5 @@
 <div class="card" data-health="{{ route.health|lower }}" id="route-{{ route.id }}">
+  {% if !route.url.is_empty() %}<a class="card-overlay" href="{{ route.url }}" target="_blank" rel="noopener" aria-label="Open {{ route.name }}"></a>{% endif %}
   <div class="card-top">
     {% if let Some(svg) = icon_svg %}
       <span class="card-icon" aria-hidden="true">{{ svg|safe }}</span>

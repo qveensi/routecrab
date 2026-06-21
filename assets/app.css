@@ -249,11 +249,34 @@ a { color: var(--accent); text-decoration: none; }
   transition: background .15s, color .15s, border-color .15s;
 }
 .theme-toggle:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-2); }
-.theme-toggle svg { width: 17px; height: 17px; display: block; }
-.icon-sun { display: none; }
-.icon-moon { display: block; }
-[data-theme="dark"] .icon-sun  { display: block; }
-[data-theme="dark"] .icon-moon { display: none; }
+/* width/height only — no display override; show/hide rules below win at higher specificity */
+.theme-toggle svg { width: 17px; height: 17px; }
+/* Bug fix: scope display to .theme-toggle so specificity (0,2,0) beats the old (0,1,1) rule */
+.theme-toggle .icon-sun  { display: none; }
+.theme-toggle .icon-moon { display: block; }
+[data-theme="dark"] .theme-toggle .icon-sun  { display: block; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+/* -- View toggle (mirrors theme-toggle) ----------------------------------- */
+.view-toggle {
+  display: grid;
+  place-items: center;
+  width: 36px; height: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.view-toggle:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-2); }
+.view-toggle svg { width: 17px; height: 17px; }
+/* grid view (default): show grid icon, hide list icon */
+.view-toggle .icon-view-list { display: none; }
+.view-toggle .icon-view-grid { display: block; }
+/* list view: show list icon, hide grid icon */
+[data-view="list"] .view-toggle .icon-view-list { display: block; }
+[data-view="list"] .view-toggle .icon-view-grid  { display: none; }
 
 /* ===========================================================================
    BOARD
@@ -304,8 +327,14 @@ a { color: var(--accent); text-decoration: none; }
 /* -- Card grid ------------------------------------------------------------ */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: .7rem;
+}
+
+/* List view: single-column rows */
+[data-view="list"] .card-grid {
+  grid-template-columns: 1fr;
+  gap: .35rem;
 }
 
 /* ===========================================================================
@@ -353,14 +382,14 @@ a { color: var(--accent); text-decoration: none; }
 .card-icon {
   display: grid;
   place-items: center;
-  width: 32px; height: 32px;
+  width: 38px; height: 38px;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
   background: var(--surface-2);
   border: 1px solid var(--border);
   color: var(--text);
 }
-.card-icon svg { width: 19px; height: 19px; fill: currentColor; display: block; }
+.card-icon svg { width: 23px; height: 23px; fill: currentColor; display: block; }
 .card-icon--text { font-size: 1.05rem; line-height: 1; }
 .card-icon--mono {
   font-family: var(--mono);
@@ -377,9 +406,11 @@ a { color: var(--accent); text-decoration: none; }
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: -.01em;
-  white-space: nowrap;
+  /* allow up to two lines before truncating, so names like "admin-server" fit */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* health badge ----------------------------------------------------------- */
@@ -425,6 +456,38 @@ a { color: var(--accent); text-decoration: none; }
   overflow: hidden;
 }
 
+/* List view card layout --------------------------------------------------- */
+[data-view="list"] .card {
+  flex-direction: row;
+  align-items: center;
+  gap: .7rem;
+  padding: .55rem .9rem .55rem 1.05rem;
+}
+[data-view="list"] .card-top {
+  flex: 1;
+  min-width: 0;
+  gap: .55rem;
+}
+/* In list view description is hidden to keep rows compact */
+[data-view="list"] .card-description { display: none; }
+/* URL inline, truncated */
+[data-view="list"] .card-url {
+  flex-shrink: 0;
+  max-width: 30ch;
+  margin: 0;
+}
+/* Prevent status bar from stretching full height in list rows */
+[data-view="list"] .card::before { top: 50%; transform: translateY(-50%); bottom: auto; height: 60%; }
+
+/* Card stretched-link overlay -------------------------------------------- */
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+/* Visible .card-url text should sit above the overlay so pointer lands on it too */
+.card-url { position: relative; z-index: 2; }
+
 /* calm flash when a card is replaced via SSE ----------------------------- */
 .card.rc-flash { animation: rc-flash 1s ease; }
 @keyframes rc-flash {
@@ -459,6 +522,31 @@ a { color: var(--accent); text-decoration: none; }
   .stat .stat-label { display: none; }
   .card-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
 }
+
+/* ===========================================================================
+   FOOTER
+   =========================================================================== */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1640px;
+  margin: 0 auto;
+  padding: .9rem 1.25rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: .76rem;
+}
+.footer a {
+  color: var(--text-faint);
+  display: inline-flex;
+  align-items: center;
+  transition: color .15s;
+}
+.footer a:hover { color: var(--accent); }
+.footer a svg { width: 18px; height: 18px; fill: currentColor; display: block; }
+.footer-right { display: flex; align-items: center; gap: .4rem; }
 
 /* -- Reduced motion ------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
