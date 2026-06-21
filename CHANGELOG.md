@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/qveensi/routecrab/releases/tag/v0.3.0) - 2026-06-21
+
+### Added
+
+- *(web)* theme now defaults from the OS (`prefers-color-scheme`) until the user toggles
+- *(web)* grid/list view toggle, persisted in localStorage
+- *(web)* footer with a GitHub repo link + app version
+- *(web)* favicon (inline brand mark)
+- *(web)* the whole service card is clickable (not just the URL)
+- *(icons)* service icons load client-side from the dashboard-icons project; `routecrab.io/icon` accepts a dashboard-icons slug or a full image URL
+
+### Changed
+
+- *(icons)* replaced the embedded Simple Icons subset with client-side `<img>` from the dashboard-icons CDN; unmatched icons fall back to a letter monogram
+- *(image)* static musl binary on `distroless/static` (was dynamic glibc on `distroless/cc`) — image size ~67 MB → ~15 MB
+- *(build)* release profile optimized for size (`opt-level=s`, fat LTO, `codegen-units=1`, strip)
+
+### Fixed
+
+- *(web)* theme toggle showed both sun and moon icons at once
+- *(model)* reject non-`http(s)` `routecrab.io/url` values (guards the clickable card href against `javascript:`/`data:`)
+
 ## [0.2.0](https://github.com/qveensi/routecrab/releases/tag/v0.2.0) - 2026-06-21
 
 ### Added
