@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.6](https://github.com/qveensi/routecrab/compare/v0.4.5...v0.4.6) - 2026-06-21
+
+### Fixed
+
+- concurrent health probes, lock-poison recovery, graceful shutdown, bool parsing ([#69](https://github.com/qveensi/routecrab/pull/69))
+
+### Other
+
+- correct MSRV rust-toolchain pin comment ([#71](https://github.com/qveensi/routecrab/pull/71))
+- *(deps)* bump github/codeql-action from 3.36.2 to 4.36.2 ([#68](https://github.com/qveensi/routecrab/pull/68))
+- *(deps)* update dtolnay/rust-toolchain requirement to 29eef336d9b2848a0b548edc03f92a220660cdb8 ([#67](https://github.com/qveensi/routecrab/pull/67))
+- *(deps)* bump sigstore/cosign-installer from 3.9.1 to 4.1.2 ([#66](https://github.com/qveensi/routecrab/pull/66))
+- *(deps)* bump rust-cross/cargo-zigbuild from 0.21.4 to 0.23.0 ([#65](https://github.com/qveensi/routecrab/pull/65))
+
 ## [0.4.5](https://github.com/qveensi/routecrab/compare/v0.4.4...v0.4.5) - 2026-06-21
 
 ### Added
