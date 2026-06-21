@@ -193,7 +193,17 @@ a { color: var(--accent); text-decoration: none; }
   font-variant-numeric: tabular-nums;
   color: var(--text);
   white-space: nowrap;
-  transition: opacity .2s ease;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity .2s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.stat:hover { border-color: var(--border-2); }
+.stat:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* active filter: full opacity + accent ring */
+.stat--active {
+  opacity: 1 !important;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset;
 }
 .stat .dot { width: .52rem; height: .52rem; border-radius: 50%; flex-shrink: 0; }
 .stat .stat-label { color: var(--text-muted); font-weight: 500; font-size: .76rem; }
