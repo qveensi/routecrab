@@ -230,6 +230,30 @@ jobs:
               --username ${{ github.actor }} \
               --password-stdin
 
+      - name: Inject per-version changes for Artifact Hub
+        # Turn this version's CHANGELOG.md section into the artifacthub.io/changes
+        # annotation so the package page shows a per-version change list. Done at
+        # package time (not committed): release-plz owns CHANGELOG, and Chart.yaml
+        # is templated from the tag. yq ships on ubuntu-latest runners.
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          changes=$(awk -v ver="$version" '
+            $0 ~ "^## \\[" ver "\\]" {grab=1; next}
+            grab && /^## \[/ {exit}
+            grab && /^[[:space:]]*-[[:space:]]/ {
+              line=$0; sub(/^[[:space:]]*-[[:space:]]*/,"",line)
+              gsub(/\*\([^)]*\)\*[[:space:]]*/,"",line)        # drop *(scope)* prefix
+              gsub(/[[:space:]]*\(\[#[0-9]+\]\([^)]*\)\)/,"",line)  # drop ([#NN](url)) suffix
+              gsub(/[[:space:]]+$/,"",line)
+              if (line != "") print "- " line
+            }' CHANGELOG.md)
+          if [ -n "$changes" ]; then
+            CH="$changes" yq -i '.annotations["artifacthub.io/changes"] = strenv(CH)' deploy/helm/routecrab/Chart.yaml
+            echo "Injected artifacthub.io/changes:"; echo "$changes"
+          else
+            echo "No CHANGELOG section for ${version}; leaving changes annotation unset."
+          fi
+
       - name: Package Helm chart
         # Drive chart version + appVersion from the release tag so the published
         # chart always matches the image (release-plz bumps Cargo, not Chart.yaml).
@@ -257,6 +281,17 @@ jobs:
           cosign login ghcr.io --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}"
           cosign sign --yes "ghcr.io/qveensi/helm/routecrab@${{ steps.push.outputs.digest }}"
 
+      - name: Upload chart package for the HTTP repo job
+        # Hand the canonically-named tgz (routecrab-<ver>.tgz, before the
+        # release-asset rename below) to the helm-repo job so the OCI and HTTP
+        # repos publish the exact same package, changes annotation and all.
+        uses: actions/upload-artifact@v7
+        with:
+          name: helm-chart
+          path: routecrab-*.tgz
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Attach chart to GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -268,6 +303,51 @@ jobs:
             cp "${pkg}" "${asset}"
             gh release upload "$GITHUB_REF_NAME" "${asset}" --clobber
           done
+
+  # ---------------------------------------------------------------------------
+  # helm-repo: also publish the chart to an HTTP Helm repo on the gh-pages
+  # branch, so `helm repo add` works alongside the OCI registry. The chart tgz
+  # files live on gh-pages and index.yaml points at https://qveensi.github.io.
+  # ---------------------------------------------------------------------------
+  helm-repo:
+    name: Publish chart to HTTP Helm repo
+    runs-on: ubuntu-latest
+    needs: chart-publish
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Set up Helm
+        uses: azure/setup-helm@v5
+
+      - name: Download chart package
+        uses: actions/download-artifact@v8
+        with:
+          name: helm-chart
+
+      - name: Publish to gh-pages branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          # Reuse the existing repo branch, or bootstrap an orphan one on first run.
+          if git ls-remote --exit-code --heads "$remote" gh-pages >/dev/null 2>&1; then
+            git clone --branch gh-pages --depth 1 "$remote" pages
+          else
+            git clone --depth 1 "$remote" pages
+            ( cd pages && git checkout --orphan gh-pages && git rm -rf . >/dev/null 2>&1 || true )
+          fi
+          cp routecrab-*.tgz pages/
+          cd pages
+          merge=""
+          [ -f index.yaml ] && merge="--merge index.yaml"
+          # shellcheck disable=SC2086  # $merge is intentionally word-split (flag or empty)
+          helm repo index . --url https://qveensi.github.io/routecrab $merge
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chart: publish ${GITHUB_REF_NAME} to HTTP Helm repo"
+          git push "$remote" HEAD:gh-pages
 
   # ---------------------------------------------------------------------------
   # binaries: build native Linux binaries (gnu/glibc), attach to GitHub release
