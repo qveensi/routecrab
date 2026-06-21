@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5](https://github.com/qveensi/routecrab/compare/v0.4.4...v0.4.5) - 2026-06-21
+
+### Added
+
+- *(chart)* NOTES, helm test, HPA, NetworkPolicy, startup probe, strict schema ([#63](https://github.com/qveensi/routecrab/pull/63))
+
+### Fixed
+
+- SSRF-harden health probes, MSRV CI, chart SA-token, SECURITY versions ([#60](https://github.com/qveensi/routecrab/pull/60))
+
+### Other
+
+- pin actions by SHA, digest-pin base images, CodeQL + Trivy, concurrency ([#64](https://github.com/qveensi/routecrab/pull/64))
+- add How-it-works, project links, RUST_LOG note, .editorconfig ([#61](https://github.com/qveensi/routecrab/pull/61))
+
 ## [0.4.4](https://github.com/qveensi/routecrab/compare/v0.4.3...v0.4.4) - 2026-06-21
 
 ### Added
