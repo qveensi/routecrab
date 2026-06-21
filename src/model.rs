@@ -73,7 +73,11 @@ impl Route {
                     // Only accept http(s) so a malicious annotation can't inject a
                     // `javascript:`/`data:` scheme into the rendered card href.
                     "url" if is_http_url(value) => self.url = value.clone(),
-                    "health-url" => self.health_url = value.clone(),
+                    // Same http(s) guard as `url`: the probe client must never be
+                    // pointed at file:/gopher:/etc. schemes via a health override.
+                    "health-url" if is_http_url(value) => self.health_url = value.clone(),
+                    // A path is resolved onto the route's own (http-validated) origin
+                    // in health::probe_target, so it cannot change scheme or host.
                     "health-path" => self.health_path = value.clone(),
                     "order" => {
                         if let Ok(order_val) = value.parse::<i32>() {
@@ -152,5 +156,17 @@ mod tests {
         r.apply_annotations(&a);
         assert_eq!(r.health_url, "https://svc/internal/health");
         assert_eq!(r.health_path, "/healthz");
+    }
+
+    #[test]
+    fn health_url_rejects_non_http_scheme() {
+        let mut r = Route::default();
+        let mut a = std::collections::BTreeMap::new();
+        a.insert(
+            "routecrab.io/health-url".into(),
+            "file:///etc/passwd".into(),
+        );
+        r.apply_annotations(&a);
+        assert_eq!(r.health_url, "", "non-http health-url must be rejected");
     }
 }

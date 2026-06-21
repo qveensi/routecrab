@@ -1,6 +1,51 @@
+use std::net::IpAddr;
 use std::time::Duration;
 
 use crate::model::{HealthStatus, Route};
+
+/// Reject probe targets that point at the host's own loopback, the cloud
+/// metadata / link-local range (169.254.0.0/16, fe80::/10), or an unspecified
+/// address. Probe targets come from untrusted `routecrab.io/health-*`
+/// annotations, so without this a tenant could aim routecrab's HTTP client at
+/// `169.254.169.254` (cloud metadata) or a localhost admin port.
+///
+/// Private ranges (10/172.16/192.168) are intentionally allowed — probing
+/// internal cluster services is a supported use case.
+fn is_blocked_ip(ip: &IpAddr) -> bool {
+    match ip {
+        IpAddr::V4(v4) => {
+            v4.is_loopback() || v4.is_link_local() || v4.is_unspecified() || v4.is_broadcast()
+        }
+        // fe80::/10 link-local has no stable std predicate; match the prefix.
+        IpAddr::V6(v6) => {
+            v6.is_loopback() || v6.is_unspecified() || (v6.segments()[0] & 0xffc0) == 0xfe80
+        }
+    }
+}
+
+/// Return true if a probe target must not be requested. Blocks unparseable
+/// URLs, `localhost`, and IP-literal hosts in the loopback/link-local/
+/// unspecified ranges. Hostnames that resolve to those ranges via DNS are a
+/// known residual (no pre-connect resolution here); the common metadata-IP and
+/// localhost-port SSRF vectors use literals and are covered.
+pub fn is_blocked_target(target: &str) -> bool {
+    let Ok(u) = reqwest::Url::parse(target) else {
+        return true;
+    };
+    let Some(host) = u.host_str() else {
+        return true;
+    };
+    let lower = host.to_ascii_lowercase();
+    if lower == "localhost" || lower.ends_with(".localhost") {
+        return true;
+    }
+    // host_str keeps IPv6 brackets; strip them before parsing.
+    let h = host.trim_start_matches('[').trim_end_matches(']');
+    if let Ok(ip) = h.parse::<IpAddr>() {
+        return is_blocked_ip(&ip);
+    }
+    false
+}
 
 /// Classify a probe result into a HealthStatus.
 ///
@@ -54,6 +99,10 @@ pub async fn run(store: crate::store::Store, cfg: crate::config::Config) {
 
     let client = reqwest::Client::builder()
         .timeout(cfg.health_timeout)
+        // Do not follow redirects: a probed URL must not be able to bounce the
+        // client to an internal address (SSRF pivot). The immediate status is
+        // what we classify.
+        .redirect(reqwest::redirect::Policy::none())
         .build()
         .expect("failed to build reqwest client");
 
@@ -72,6 +121,12 @@ pub async fn run(store: crate::store::Store, cfg: crate::config::Config) {
             }
 
             let target = probe_target(&route);
+            // Refuse SSRF-prone targets (metadata IP, loopback, link-local).
+            if is_blocked_target(&target) {
+                tracing::warn!(route = %route.id, target = %target, "blocked SSRF-prone probe target");
+                store.set_health(&route.id, HealthStatus::Unknown);
+                continue;
+            }
             let start = tokio::time::Instant::now();
             let status_code = client
                 .head(&target)
@@ -165,6 +220,32 @@ mod tests {
             url: "http://x".into(),
             ..Default::default()
         }));
+    }
+
+    #[test]
+    fn blocks_ssrf_prone_targets() {
+        // Cloud metadata, loopback, link-local, unspecified, localhost → blocked.
+        for t in [
+            "http://169.254.169.254/latest/meta-data/",
+            "http://127.0.0.1:8080/",
+            "https://localhost/healthz",
+            "http://0.0.0.0/",
+            "http://[::1]/",
+            "http://[fe80::1]/",
+            "not-a-url",
+        ] {
+            assert!(is_blocked_target(t), "{t} must be blocked");
+        }
+        // Public hosts and private cluster ranges (internal-healthz use case)
+        // must stay allowed.
+        for t in [
+            "https://app.example.com/healthz",
+            "http://10.0.0.5:9000/healthz",
+            "http://192.168.1.10/health",
+            "http://172.16.0.3/",
+        ] {
+            assert!(!is_blocked_target(t), "{t} must be allowed");
+        }
     }
 
     #[test]
