@@ -4,6 +4,53 @@ entries:
   - annotations:
       artifacthub.io/category: monitoring-logging
       artifacthub.io/changes: |-
+        - NOTES, helm test, HPA, NetworkPolicy, startup probe, strict schema
+        - SSRF-harden health probes, MSRV CI, chart SA-token, SECURITY versions
+        - pin actions by SHA, digest-pin base images, CodeQL + Trivy, concurrency
+        - add How-it-works, project links, RUST_LOG note, .editorconfig
+      artifacthub.io/images: |
+        - name: routecrab
+          image: ghcr.io/qveensi/routecrab:latest
+          platforms:
+            - linux/amd64
+            - linux/arm64
+      artifacthub.io/license: MIT
+      artifacthub.io/links: |
+        - name: source
+          url: https://github.com/qveensi/routecrab
+        - name: support
+          url: https://github.com/qveensi/routecrab/issues
+      artifacthub.io/maintainers: |
+        - name: Yevhenii Huzii
+          email: yevhenii.huzii@gmail.com
+      artifacthub.io/screenshots: |
+        - title: Dashboard (dark)
+          url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/hero-dark.png
+        - title: Dashboard (light)
+          url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/hero-light.png
+        - title: List view
+          url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/list-view.png
+        - title: Search
+          url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/search.png
+    apiVersion: v2
+    appVersion: 0.4.5
+    created: "2026-06-21T10:41:58.81023412Z"
+    description: 'routecrab watches Gateway API HTTPRoute/Gateway resources cluster-wide
+      and exposes a live JSON inventory with health classification. '
+    digest: 8c6f2bd5b49247d9b1309b0c9cc848c9c56b8fc50dae52fd05fd514f3f1a90cd
+    home: https://github.com/qveensi/routecrab
+    icon: https://raw.githubusercontent.com/qveensi/routecrab/main/assets/logo.svg
+    kubeVersion: '>=1.25.0-0'
+    name: routecrab
+    sources:
+    - https://github.com/qveensi/routecrab
+    type: application
+    urls:
+    - https://qveensi.github.io/routecrab/routecrab-0.4.5.tgz
+    version: 0.4.5
+  - annotations:
+      artifacthub.io/category: monitoring-logging
+      artifacthub.io/changes: |-
         - Artifact Hub changes + HTTP Helm repo + screenshots gallery
         - Artifact Hub screenshots + cargo-binstall support
       artifacthub.io/images: |
@@ -32,7 +79,7 @@ entries:
           url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/search.png
     apiVersion: v2
     appVersion: 0.4.4
-    created: "2026-06-21T04:40:30.917388692Z"
+    created: "2026-06-21T10:41:58.809456553Z"
     description: 'routecrab watches Gateway API HTTPRoute/Gateway resources cluster-wide
       and exposes a live JSON inventory with health classification. '
     digest: fa1d895a739d12dabd52943f9f4e5e1f4eb97d68cafd68400d704b78d3ae0b7b
@@ -46,4 +93,4 @@ entries:
     urls:
     - https://qveensi.github.io/routecrab/routecrab-0.4.4.tgz
     version: 0.4.4
-generated: "2026-06-21T04:40:30.916581264Z"
+generated: "2026-06-21T10:41:58.808683976Z"
