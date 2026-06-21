@@ -200,6 +200,13 @@ cosign verify ghcr.io/qveensi/routecrab:latest \
 cosign verify ghcr.io/qveensi/helm/routecrab:<version> \
   --certificate-identity-regexp "$IDENTITY" \
   --certificate-oidc-issuer "$ISSUER"
+
+# Release binary (.sig + .crt are attached to each GitHub release)
+BIN=routecrab-<version>-linux-amd64
+cosign verify-blob "$BIN" \
+  --signature "$BIN.sig" --certificate "$BIN.crt" \
+  --certificate-identity-regexp "$IDENTITY" \
+  --certificate-oidc-issuer "$ISSUER"
 ```
 
 ## Project
