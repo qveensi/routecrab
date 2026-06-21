@@ -1,0 +1,24 @@
+[package]
+name = "routecrab-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.routecrab]
+path = ".."
+
+[[bin]]
+name = "parse_annotations"
+path = "fuzz_targets/parse_annotations.rs"
+test = false
+doc = false
+bench = false
+
+# Own workspace so the parent package doesn't try to build the fuzz crate.
+[workspace]
