@@ -4,6 +4,8 @@
 [![Release](https://img.shields.io/github/v/release/qveensi/routecrab?sort=semver)](https://github.com/qveensi/routecrab/releases)
 [![License: MIT](https://img.shields.io/github/license/qveensi/routecrab)](LICENSE)
 [![Image](https://img.shields.io/badge/ghcr.io-qveensi%2Froutecrab-2496ed?logo=docker&logoColor=white)](https://github.com/qveensi/routecrab/pkgs/container/routecrab)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/qveensi/routecrab/badge)](https://securityscorecards.dev/viewer/?uri=github.com/qveensi/routecrab)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/routecrab)](https://artifacthub.io/packages/helm/routecrab/routecrab)
 
 A Kubernetes-native dashboard that auto-discovers Gateway API `HTTPRoute` resources, health-checks them, and serves a real-time board with SSE live updates.
 
@@ -163,7 +165,7 @@ The Helm chart creates a `ClusterRole` and `ClusterRoleBinding` that grant `list
 | Path | Method | Description |
 |---|---|---|
 | `/` | GET | HTML dashboard board (htmx + SSE); live-refreshes on any discovery/annotation/health change |
-| `/api/routes` | GET | JSON array of all non-hidden routes |
+| `/api/routes` | GET | JSON array of all discovered routes (see [docs/openapi.yaml](docs/openapi.yaml)) |
 | `/events` | GET | SSE stream for live board updates |
 | `/healthz` | GET | Liveness/readiness probe — returns `200 ok` |
 
