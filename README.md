@@ -9,7 +9,7 @@ A Kubernetes-native dashboard that auto-discovers Gateway API `HTTPRoute` resour
 
 Most route dashboards require static configuration. routecrab uses the Gateway API as its source of truth: any `HTTPRoute` in the cluster appears on the board automatically, labelled with health status, grouped by namespace or annotation, and filterable by name. It produces structured JSON logs and Prometheus metrics so it fits naturally into existing observability stacks.
 
-![routecrab board](docs/screenshot.png)
+![routecrab dashboard](docs/screenshots/hero-dark.png)
 
 ## Features
 
@@ -111,7 +111,6 @@ routecrab is configured entirely through environment variables.
 | `ROUTECRAB_HEALTH_TIMEOUT` | `5s` | Per-request timeout for health checks |
 | `ROUTECRAB_NAMESPACE_ALLOWLIST` | _(empty = all)_ | Comma-separated namespace allowlist |
 | `ROUTECRAB_NAMESPACE_DENYLIST` | `kube-system,kube-public,kube-node-lease` | Comma-separated namespace denylist |
-| `ROUTECRAB_RESYNC_INTERVAL` | `1800s` | **Reserved (not yet honored).** Parsed but not wired to the watcher. |
 | `ROUTECRAB_METRICS_ENABLED` | `true` | Serve Prometheus `/metrics` on the dedicated metrics port |
 | `ROUTECRAB_METRICS_PORT` | `9090` | Port for the metrics listener (separate from the app port) |
 | `ROUTECRAB_METRICS_ADDRESS` | `0.0.0.0` | Bind address for the metrics listener |

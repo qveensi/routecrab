@@ -16,7 +16,6 @@ routecrab is configured entirely through environment variables. All variables ar
 | `ROUTECRAB_HEALTH_TIMEOUT` | duration | `5s` | Per-request timeout applied to each health probe. Accepts humantime format. |
 | `ROUTECRAB_NAMESPACE_ALLOWLIST` | CSV | _(empty)_ | Comma-separated list of namespaces to include. When empty, all namespaces are included (subject to the denylist). When non-empty, only listed namespaces are considered. |
 | `ROUTECRAB_NAMESPACE_DENYLIST` | CSV | `kube-system,kube-public,kube-node-lease` | Comma-separated list of namespaces to always exclude. Deny takes priority over allow. |
-| `ROUTECRAB_RESYNC_INTERVAL` | duration | `1800s` | **Reserved (not yet honored).** Parsed and stored but the kube-rs watcher currently uses its default relist behaviour. Accepts humantime format. |
 | `ROUTECRAB_METRICS_ENABLED` | bool | `true` | Serve Prometheus `/metrics` on the dedicated metrics port. |
 | `ROUTECRAB_METRICS_PORT` | u16 | `9090` | Port for the metrics listener (separate from the app port). |
 | `ROUTECRAB_METRICS_ADDRESS` | string | `0.0.0.0` | Bind address for the metrics listener. |

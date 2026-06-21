@@ -3,7 +3,6 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-#[allow(dead_code)]
 pub const ANNOTATION_PREFIX: &str = "routecrab.io/";
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -55,7 +54,6 @@ fn is_http_url(v: &str) -> bool {
 }
 
 impl Route {
-    #[allow(dead_code)]
     pub fn display_title(&self) -> &str {
         if self.title.is_empty() {
             &self.name
@@ -64,7 +62,6 @@ impl Route {
         }
     }
 
-    #[allow(dead_code)]
     pub fn apply_annotations(&mut self, ann: &BTreeMap<String, String>) {
         for (key, value) in ann {
             if let Some(suffix) = key.strip_prefix(ANNOTATION_PREFIX) {

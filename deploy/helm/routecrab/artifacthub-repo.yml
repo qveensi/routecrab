@@ -6,7 +6,7 @@
 #      oras push ghcr.io/qveensi/helm/routecrab:artifacthub.io \
 #        --config /dev/null:application/vnd.cncf.artifacthub.config.v1+yaml \
 #        artifacthub-repo.yml:application/vnd.cncf.artifacthub.repository-metadata.layer.v1.yaml
-repositoryID: ""
+repositoryID: "4d2ade92-06b6-459f-8f14-5f8cf967fa07"
 owners:
   - name: Yevhenii Huzii
     email: yevhenii.huzii@gmail.com

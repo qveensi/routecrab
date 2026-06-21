@@ -47,7 +47,6 @@ pub fn probe_target(r: &Route) -> String {
 /// Run the health-check loop. Returns immediately when health checking is
 /// disabled in config. Otherwise ticks on `cfg.health_interval`, probing
 /// each eligible route with a HEAD request and storing the result.
-#[allow(dead_code)]
 pub async fn run(store: crate::store::Store, cfg: crate::config::Config) {
     if !cfg.health_enabled {
         return;

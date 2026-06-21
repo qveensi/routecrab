@@ -8,7 +8,6 @@ use crate::{config::Config, model::Route, store::Store};
 /// - `hosts` comes from `spec.hostnames`.
 /// - `url` is `"https://{first_host}{first_path}"` (TLS assumed; path from first rule/match).
 /// - `group` defaults to the namespace; overridden by `routecrab.io/group` annotation.
-#[allow(dead_code)]
 pub fn route_from_httproute(hr: &HTTPRoute) -> Route {
     let ns = hr.metadata.namespace.clone().unwrap_or_default();
     let name = hr.metadata.name.clone().unwrap_or_default();
@@ -79,7 +78,6 @@ pub fn route_from_httproute(hr: &HTTPRoute) -> Route {
 ///
 /// Error handling: stream errors are logged and skipped; the watcher recovers
 /// automatically on the next poll (kube-rs built-in retry).
-#[allow(dead_code)]
 pub async fn watch(store: Store, cfg: Config) {
     use futures::TryStreamExt;
     use kube::{
