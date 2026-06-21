@@ -1,0 +1,88 @@
+openapi: 3.1.0
+info:
+  title: routecrab API
+  description: >
+    HTTP API of routecrab — a Kubernetes-native dashboard that auto-discovers
+    Gateway API HTTPRoute resources and health-checks them. Served on the app
+    port (default 8080); Prometheus /metrics is on a separate port.
+  version: "0.4.6"
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: http://localhost:8080
+    description: Local port-forward
+paths:
+  /api/routes:
+    get:
+      summary: List discovered routes
+      description: >
+        Returns every route currently in the store, sorted by (group, order,
+        name). Includes routes flagged hidden — use the `hidden` field to filter
+        client-side.
+      operationId: listRoutes
+      responses:
+        "200":
+          description: Array of routes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Route"
+  /events:
+    get:
+      summary: Server-Sent Events stream
+      description: >
+        text/event-stream that pushes a re-rendered board fragment on any
+        discovery, annotation, or health change. Consumed by the htmx board.
+      operationId: events
+      responses:
+        "200":
+          description: SSE stream.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+  /healthz:
+    get:
+      summary: Liveness/readiness probe
+      operationId: healthz
+      responses:
+        "200":
+          description: Service is up.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok
+components:
+  schemas:
+    HealthStatus:
+      type: string
+      enum: [unknown, healthy, degraded, unhealthy]
+      description: Latest health classification for the route.
+    Route:
+      type: object
+      properties:
+        id: { type: string, description: "Stable id (namespace/name)." }
+        name: { type: string }
+        namespace: { type: string }
+        url: { type: string, description: "Public clickable URL (http/https)." }
+        health_url: { type: string, description: "Probe URL override (http/https)." }
+        health_path: { type: string, description: "Probe path on the route origin." }
+        title: { type: string }
+        description: { type: string }
+        group: { type: string, description: "Group heading; defaults to namespace." }
+        icon: { type: string, description: "dashboard-icons slug or full image URL." }
+        order: { type: integer, format: int32 }
+        hidden: { type: boolean }
+        monitor_disabled: { type: boolean }
+        hosts:
+          type: array
+          items: { type: string }
+        paths:
+          type: array
+          items: { type: string }
+        health: { $ref: "#/components/schemas/HealthStatus" }
+      required: [id, name, namespace, health]
