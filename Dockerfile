@@ -19,7 +19,9 @@ RUN case "$TARGETARCH" in \
 # Cache dependency compilation: copy manifests first, stub out the library and
 # binary entry-points, then fetch+compile deps in isolation.  Subsequent builds
 # that only change application source skip this expensive layer.
-COPY Cargo.toml Cargo.lock ./
+# build.rs emits ROUTECRAB_BUILD_YEAR (used via env! in the crate) — it MUST be
+# present in the builder or the real compile fails with "env var not defined".
+COPY Cargo.toml Cargo.lock build.rs ./
 
 # askama / rust-embed read assets/ and templates/ at compile time; provide them
 # before any `cargo build` invocation.
