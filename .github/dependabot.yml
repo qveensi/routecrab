@@ -15,8 +15,16 @@ updates:
           - minor
           - patch
 
-  # GitHub Actions (we pin action majors; Dependabot bumps them)
+  # GitHub Actions (pinned by SHA; Dependabot bumps the SHA + version comment)
   - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "ci(deps)"
+
+  # Dockerfile base images (pinned by digest; Dependabot bumps the digest)
+  - package-ecosystem: docker
     directory: "/"
     schedule:
       interval: weekly
