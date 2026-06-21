@@ -5,7 +5,9 @@ metadata:
   labels:
     {{- include "routecrab.labels" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "routecrab.selectorLabels" . | nindent 6 }}
@@ -55,6 +57,10 @@ spec:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
@@ -66,7 +72,9 @@ spec:
             {{- end }}
       volumes:
         - name: tmp
-          emptyDir: {}
+          # Bounded so a runaway /tmp writer can't fill the node (read-only rootfs).
+          emptyDir:
+            sizeLimit: 16Mi
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

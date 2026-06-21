@@ -94,6 +94,16 @@ readinessProbe:
   timeoutSeconds: 3
   failureThreshold: 3
 
+# Optional startup probe. Covers a slow initial HTTPRoute cache sync so the
+# liveness probe doesn't restart the pod before it's ready. Empty = disabled.
+# startupProbe:
+#   httpGet:
+#     path: /healthz
+#     port: http
+#   periodSeconds: 5
+#   failureThreshold: 30
+startupProbe: {}
+
 nodeSelector: {}
 
 tolerations: []
@@ -132,6 +142,25 @@ pdb:
   enabled: true
   minAvailable: 1
   # maxUnavailable: 1  # Uncomment to use maxUnavailable instead of minAvailable.
+
+# Horizontal Pod Autoscaler (autoscaling/v2). When enabled, the Deployment's
+# replicas field is dropped so the HPA owns scaling.
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# ─── Network policy ──────────────────────────────────────────────────────────
+
+networkPolicy:
+  # Create a NetworkPolicy for the pods. Default ingress allows the board and
+  # metrics ports; default egress is open because routecrab must reach the
+  # kube-apiserver and probe arbitrary route backends. Override to tighten.
+  enabled: false
+  ingress: []
+  egress: []
 
 # ─── Exposure ────────────────────────────────────────────────────────────────
 
