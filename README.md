@@ -201,10 +201,10 @@ cosign verify ghcr.io/qveensi/helm/routecrab:<version> \
   --certificate-identity-regexp "$IDENTITY" \
   --certificate-oidc-issuer "$ISSUER"
 
-# Release binary (.sig + .crt are attached to each GitHub release)
+# Release binary (a Sigstore bundle <bin>.sig is attached to each GitHub release)
 BIN=routecrab-<version>-linux-amd64
 cosign verify-blob "$BIN" \
-  --signature "$BIN.sig" --certificate "$BIN.crt" \
+  --bundle "$BIN.sig" \
   --certificate-identity-regexp "$IDENTITY" \
   --certificate-oidc-issuer "$ISSUER"
 ```
