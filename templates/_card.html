@@ -1,13 +1,9 @@
 <div class="card" data-health="{{ route.health|lower }}" id="route-{{ route.id }}">
   {% if !route.url.is_empty() %}<a class="card-overlay" href="{{ route.url }}" target="_blank" rel="noopener" aria-label="Open {{ route.name }}"></a>{% endif %}
   <div class="card-top">
-    {% if let Some(svg) = icon_svg %}
-      <span class="card-icon" aria-hidden="true">{{ svg|safe }}</span>
-    {% else if !route.icon.is_empty() %}
-      <span class="card-icon card-icon--text" aria-hidden="true">{{ route.icon }}</span>
-    {% else %}
-      <span class="card-icon card-icon--mono" aria-hidden="true" data-mono="{% if !route.title.is_empty() %}{{ route.title }}{% else %}{{ route.name }}{% endif %}"></span>
-    {% endif %}
+    <span class="card-icon" aria-hidden="true" data-mono="{% if !route.title.is_empty() %}{{ route.title }}{% else %}{{ route.name }}{% endif %}">
+      <img class="card-img" src="{{ icon_url }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="iconFail(this)">
+    </span>
     <span class="card-title">{% if !route.title.is_empty() %}{{ route.title }}{% else %}{{ route.name }}{% endif %}</span>
     <span class="badge" title="Health: {{ route.health|lower }}">
       <span class="badge-dot" aria-hidden="true"></span>

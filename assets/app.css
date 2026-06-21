@@ -390,7 +390,7 @@ a { color: var(--accent); text-decoration: none; }
   color: var(--text);
 }
 .card-icon svg { width: 23px; height: 23px; fill: currentColor; display: block; }
-.card-icon--text { font-size: 1.05rem; line-height: 1; }
+.card-img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .card-icon--mono {
   font-family: var(--mono);
   font-weight: 700;
