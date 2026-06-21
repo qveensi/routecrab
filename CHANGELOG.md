@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1](https://github.com/qveensi/routecrab/compare/v0.4.0...v0.4.1) - 2026-06-21
+
+### Other
+
+- *(release)* opt-in Docker Hub mirror (copy ghcr multi-arch image, no rebuild)
+
 ## [0.4.0](https://github.com/qveensi/routecrab/compare/v0.3.5...v0.4.0) - 2026-06-21
 
 ### Other
