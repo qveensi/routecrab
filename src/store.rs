@@ -13,6 +13,9 @@ pub enum Change {
 
 #[derive(Clone)]
 pub struct Store {
+    // Lock access recovers from poisoning (`unwrap_or_else(into_inner)`) instead
+    // of panicking: the guarded data is plain owned structs, so a panic in one
+    // request must not cascade and take the whole dashboard down.
     inner: Arc<RwLock<IndexMap<String, Route>>>,
     tx: broadcast::Sender<Change>,
 }
@@ -29,7 +32,7 @@ impl Store {
     pub fn upsert(&self, r: Route) {
         self.inner
             .write()
-            .expect("store lock poisoned")
+            .unwrap_or_else(|e| e.into_inner())
             .insert(r.id.clone(), r.clone());
         // ignore error: no active subscribers is expected when idle
         let _ = self.tx.send(Change::Upsert(Box::new(r)));
@@ -38,7 +41,7 @@ impl Store {
     pub fn remove(&self, id: &str) {
         self.inner
             .write()
-            .expect("store lock poisoned")
+            .unwrap_or_else(|e| e.into_inner())
             .shift_remove(id);
         let _ = self.tx.send(Change::Remove(id.to_owned()));
     }
@@ -48,7 +51,7 @@ impl Store {
         let mut routes: Vec<Route> = self
             .inner
             .read()
-            .expect("store lock poisoned")
+            .unwrap_or_else(|e| e.into_inner())
             .values()
             .cloned()
             .collect();
@@ -65,7 +68,7 @@ impl Store {
     /// No-op if the id is absent.
     pub fn set_health(&self, id: &str, h: HealthStatus) {
         let updated = {
-            let mut guard = self.inner.write().expect("store lock poisoned");
+            let mut guard = self.inner.write().unwrap_or_else(|e| e.into_inner());
             guard.get_mut(id).map(|r| {
                 r.health = h;
                 r.clone()

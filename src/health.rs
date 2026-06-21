@@ -1,7 +1,13 @@
 use std::net::IpAddr;
 use std::time::Duration;
 
+use futures::StreamExt;
+
 use crate::model::{HealthStatus, Route};
+
+/// Max in-flight health probes per tick. Bounds load on routecrab and upstreams
+/// while keeping a slow host from serializing the whole sweep.
+const HEALTH_CONCURRENCY: usize = 16;
 
 /// Reject probe targets that point at the host's own loopback, the cloud
 /// metadata / link-local range (169.254.0.0/16, fe80::/10), or an unspecified
@@ -115,30 +121,32 @@ pub async fn run(store: crate::store::Store, cfg: crate::config::Config) {
         interval.tick().await;
 
         let routes = store.list();
-        for route in routes {
-            if !should_check(&route) {
-                continue;
-            }
-
-            let target = probe_target(&route);
-            // Refuse SSRF-prone targets (metadata IP, loopback, link-local).
-            if is_blocked_target(&target) {
-                tracing::warn!(route = %route.id, target = %target, "blocked SSRF-prone probe target");
-                store.set_health(&route.id, HealthStatus::Unknown);
-                continue;
-            }
-            let start = tokio::time::Instant::now();
-            let status_code = client
-                .head(&target)
-                .send()
-                .await
-                .ok()
-                .map(|resp| resp.status().as_u16());
-            let elapsed = start.elapsed();
-
-            let health = classify(status_code, elapsed, degraded_after);
-            store.set_health(&route.id, health);
-        }
+        // Probe concurrently (bounded) so one slow/hanging upstream cannot stall
+        // the whole tick and push the loop past health_interval.
+        futures::stream::iter(routes.into_iter().filter(should_check))
+            .for_each_concurrent(HEALTH_CONCURRENCY, |route| {
+                let client = client.clone();
+                let store = store.clone();
+                async move {
+                    let target = probe_target(&route);
+                    // Refuse SSRF-prone targets (metadata IP, loopback, link-local).
+                    if is_blocked_target(&target) {
+                        tracing::warn!(route = %route.id, target = %target, "blocked SSRF-prone probe target");
+                        store.set_health(&route.id, HealthStatus::Unknown);
+                        return;
+                    }
+                    let start = tokio::time::Instant::now();
+                    let status_code = client
+                        .head(&target)
+                        .send()
+                        .await
+                        .ok()
+                        .map(|resp| resp.status().as_u16());
+                    let elapsed = start.elapsed();
+                    store.set_health(&route.id, classify(status_code, elapsed, degraded_after));
+                }
+            })
+            .await;
     }
 }
 
