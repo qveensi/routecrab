@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/qveensi/routecrab/releases/tag/v0.3.1) - 2026-06-21
+
+### Fixed
+
+- *(icons)* monogram fallback now renders on a CDN miss (the `iconFail` handler's whitespace guard left the chip blank)
+- *(icons)* bridge common slug mismatches to dashboard-icons (`argocd`→`argo-cd`, `victorialogs`/`victoriametrics`-vmui→`victoriametrics`, `k8s`→`kubernetes`, `postgres`→`postgresql`)
+
+### Changed
+
+- *(ci)* publish the Helm chart to `ghcr.io/qveensi/helm` (was `…/charts`); release chart asset renamed `routecrab-helm-chart-<ver>.tgz`
+
 ## [0.3.0](https://github.com/qveensi/routecrab/releases/tag/v0.3.0) - 2026-06-21
 
 ### Added
