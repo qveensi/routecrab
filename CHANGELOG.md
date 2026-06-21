@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.5](https://github.com/qveensi/routecrab/compare/v0.3.4...v0.3.5) - 2026-06-21
+
+### Other
+
+- README badges + fix chart OCI path + Docker run; Artifact Hub chart metadata
+
 ## [0.3.4](https://github.com/qveensi/routecrab/compare/v0.3.3...v0.3.4) - 2026-06-21
 
 ### Fixed
