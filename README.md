@@ -146,6 +146,25 @@ ghcr.io/qveensi/routecrab:<tag>
 
 Distroless base, nonroot uid 65532, read-only root filesystem. MSRV: Rust 1.88 (edition 2021).
 
+## Verifying signatures
+
+Release images and the OCI Helm chart are signed with [cosign](https://github.com/sigstore/cosign) keyless signing (Sigstore) in CI — no long-lived keys. Verify with the GitHub Actions OIDC identity:
+
+```bash
+IDENTITY='^https://github.com/qveensi/routecrab/.github/workflows/release.yml@refs/tags/'
+ISSUER='https://token.actions.githubusercontent.com'
+
+# Image
+cosign verify ghcr.io/qveensi/routecrab:latest \
+  --certificate-identity-regexp "$IDENTITY" \
+  --certificate-oidc-issuer "$ISSUER"
+
+# Helm chart (replace <version>)
+cosign verify ghcr.io/qveensi/helm/routecrab:<version> \
+  --certificate-identity-regexp "$IDENTITY" \
+  --certificate-oidc-issuer "$ISSUER"
+```
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
