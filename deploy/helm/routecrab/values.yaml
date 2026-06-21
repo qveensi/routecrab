@@ -22,6 +22,9 @@ serviceAccount:
   # The name of the ServiceAccount to use.
   # If not set and create is true, a name is generated using the fullname helper.
   name: ""
+  # routecrab needs the API token to watch HTTPRoutes, so this defaults to true.
+  # Applied to both the ServiceAccount and the pod spec so they never disagree.
+  automountServiceAccountToken: true
 
 podAnnotations: {}
 podLabels: {}

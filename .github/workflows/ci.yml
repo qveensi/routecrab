@@ -15,6 +15,17 @@ jobs:
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test --all
 
+  # Verify the crate still compiles on its declared MSRV (Cargo.toml rust-version).
+  # Without this, an accidental newer-stdlib API silently breaks the 1.88 claim.
+  msrv:
+    name: msrv (1.88)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@1.88
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check --locked --all-targets
+
   # Build the release image on every PR so a broken Dockerfile (e.g. a missing
   # COPY of build.rs) fails here instead of after release-plz has already cut
   # the tag — the real multi-arch push only runs post-tag in release.yml.

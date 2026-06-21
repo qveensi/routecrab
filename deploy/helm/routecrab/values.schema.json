@@ -34,7 +34,8 @@
       "properties": {
         "create": { "type": "boolean" },
         "annotations": { "type": "object" },
-        "name": { "type": "string" }
+        "name": { "type": "string" },
+        "automountServiceAccountToken": { "type": "boolean" }
       }
     },
     "podAnnotations": { "type": "object" },

@@ -5,10 +5,10 @@
 routecrab is pre-1.0. Security fixes land on `main` and ship in the next
 release. Only the latest released version is supported.
 
-| Version | Supported |
-| ------- | --------- |
-| 0.1.x   | ✅        |
-| < 0.1   | ❌        |
+| Version              | Supported |
+| -------------------- | --------- |
+| Latest `0.x` release | ✅        |
+| Any older release    | ❌        |
 
 ## Reporting a Vulnerability
 
