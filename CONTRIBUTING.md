@@ -19,9 +19,16 @@ Set `KUBECONFIG=/dev/null` to suppress the kube client warning when running with
 Run these before opening a pull request:
 
 ```bash
-cargo test --all                          # all unit + integration tests
+cargo test --all                          # all unit + integration tests (incl. proptest)
 cargo fmt --all -- --check                # formatting
 cargo clippy --all-targets -- -D warnings # lints (warnings are errors)
+cargo deny check                          # dependency licenses + advisories
+```
+
+Fuzzing (optional, requires nightly + `cargo install cargo-fuzz`):
+
+```bash
+cargo fuzz run parse_annotations          # fuzz the annotation/URL parser
 ```
 
 ## Commits and releases
