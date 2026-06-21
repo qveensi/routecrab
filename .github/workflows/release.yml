@@ -220,15 +220,19 @@ jobs:
       - name: Push Helm chart
         run: |
           for pkg in routecrab-*.tgz; do
-            helm push "${pkg}" oci://ghcr.io/qveensi/charts
+            helm push "${pkg}" oci://ghcr.io/qveensi/helm
           done
 
       - name: Attach chart to GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Rename to make it obvious this asset is a packaged Helm chart.
+          version="${GITHUB_REF_NAME#v}"
           for pkg in routecrab-*.tgz; do
-            gh release upload "$GITHUB_REF_NAME" "${pkg}" --clobber
+            asset="routecrab-helm-chart-${version}.tgz"
+            cp "${pkg}" "${asset}"
+            gh release upload "$GITHUB_REF_NAME" "${asset}" --clobber
           done
 
   # ---------------------------------------------------------------------------
