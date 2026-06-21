@@ -9,7 +9,13 @@ A Kubernetes-native dashboard that auto-discovers Gateway API `HTTPRoute` resour
 
 Most route dashboards require static configuration. routecrab uses the Gateway API as its source of truth: any `HTTPRoute` in the cluster appears on the board automatically, labelled with health status, grouped by namespace or annotation, and filterable by name. It produces structured JSON logs and Prometheus metrics so it fits naturally into existing observability stacks.
 
-![routecrab dashboard](docs/screenshots/hero-dark.png)
+## Screenshots
+
+| Dark mode | Light mode |
+|:---:|:---:|
+| ![Dark mode dashboard](docs/screenshots/hero-dark.png) | ![Light mode dashboard](docs/screenshots/hero-light.png) |
+| **List view** | **Search** |
+| ![List view](docs/screenshots/list-view.png) | ![Search](docs/screenshots/search.png) |
 
 ## Features
 
@@ -35,6 +41,17 @@ kubectl port-forward -n routecrab svc/routecrab 8080:80
 ```
 
 Open [http://localhost:8080](http://localhost:8080).
+
+### Helm (HTTP repo)
+
+Prefer a classic chart repository over OCI:
+
+```bash
+helm repo add routecrab https://qveensi.github.io/routecrab
+helm repo update
+helm install routecrab routecrab/routecrab \
+  --namespace routecrab --create-namespace
+```
 
 ### Docker
 
