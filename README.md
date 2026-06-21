@@ -12,6 +12,7 @@ Most route dashboards require static configuration. routecrab uses the Gateway A
 - **Live health checks** — polls each route's URL at a configurable interval; statuses are `healthy`, `degraded`, `unhealthy`, or `unknown`.
 - **Real-time board** — htmx + SSE push updates to open browser tabs without polling.
 - **Annotation-driven metadata** — override title, description, group, display order, icon slug, and more with `routecrab.io/*` annotations on the HTTPRoute.
+- **Client-side service icons** — service icons loaded client-side from [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) (homarr-labs); set `routecrab.io/icon` to a slug or full URL. Unresolved icons fall back to a letter monogram.
 - **Namespace filtering** — allow/deny lists control which namespaces are included.
 - **Structured logs** — plain text (default) or JSON (`ROUTECRAB_LOG_FORMAT=json`).
 - **Prometheus metrics** — `routecrab_routes_total`, `routecrab_routes_by_health{status=...}`, plus axum HTTP metrics.
@@ -71,7 +72,7 @@ Attach `routecrab.io/*` annotations to any `HTTPRoute` to control how it appears
 | `routecrab.io/title` | string | — (falls back to resource name) | Display title on the card |
 | `routecrab.io/description` | string | — | Short description shown under the title |
 | `routecrab.io/group` | string | namespace name | Group heading to place the card under |
-| `routecrab.io/icon` | string | — | Simple Icons slug; the matching SVG is embedded inline in the card |
+| `routecrab.io/icon` | string | — | dashboard-icons slug (e.g. `argo-cd`) or full image URL; icon loaded client-side |
 | `routecrab.io/url` | string | derived from first host + path | Clickable URL on the card |
 | `routecrab.io/order` | i32 | `0` | Sort order within a group (lower = earlier) |
 | `routecrab.io/hidden` | `"true"` | — | Set `"true"` to hide the route from the board |

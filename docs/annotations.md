@@ -11,7 +11,7 @@ Annotations are applied at discovery time. Changes take effect on the next watch
 | `routecrab.io/title` | string | _(falls back to resource name)_ | Overrides the display title shown on the card. If absent or empty, the resource `.metadata.name` is used. |
 | `routecrab.io/description` | string | _(empty)_ | Short description rendered below the title on the card. |
 | `routecrab.io/group` | string | _(namespace name)_ | Group heading under which the card is placed. Cards sharing the same group appear together. Defaults to the resource namespace. |
-| `routecrab.io/icon` | string | _(empty)_ | Simple Icons slug to associate with the card. The slug must match a vendored icon (lowercase, non-alphanumeric stripped). Example: `grafana`, `prometheus`, `nginx`. |
+| `routecrab.io/icon` | string | _(empty)_ | dashboard-icons slug (e.g. `argo-cd`, `grafana`) or a full image URL. The browser fetches the icon from the [dashboard-icons CDN](https://github.com/homarr-labs/dashboard-icons); unmatched slugs show a letter monogram. |
 | `routecrab.io/url` | string | _(derived: `https://{first-host}{first-path}`)_ | Overrides the clickable URL shown on the card. Useful when the derived URL is not publicly reachable. |
 | `routecrab.io/order` | i32 | `0` | Sort order within a group. Cards are sorted ascending by order, then by name. Non-integer values are silently ignored and the default (`0`) is kept. |
 | `routecrab.io/hidden` | string | _(not hidden)_ | Set to `"true"` to hide this route from the board entirely. Any other value (including absent) leaves the route visible. |
@@ -21,7 +21,7 @@ Annotations are applied at discovery time. Changes take effect on the next watch
 
 ## Icon Rendering Note
 
-The `routecrab.io/icon` annotation sets the icon slug on the route. At render time, routecrab resolves the slug against the embedded Simple Icons subset (`icons.rs`) and injects the SVG directly into the card. If no vendored icon matches the slug, the annotation value is rendered as plain text as a fallback. Resolution order: the annotation slug (if set), otherwise the service name slugified (lowercase, `.` → `dot`, `+` → `plus`, other non-alphanumerics stripped).
+The `routecrab.io/icon` annotation sets the icon for the route. Set it to a dashboard-icons slug (lowercase, hyphens — e.g. `argo-cd`, `grafana`, `prometheus`) or a full `http(s)://` URL pointing to any image. The Rust app builds the CDN URL; the browser fetches the icon at render time from the [homarr-labs dashboard-icons CDN](https://github.com/homarr-labs/dashboard-icons). If the slug does not match any icon in the CDN, the browser's image error handler replaces the broken image with a letter monogram (first character of the display title or route name). No icons are embedded in the binary.
 
 ## Worked Example
 

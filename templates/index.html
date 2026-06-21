@@ -117,6 +117,14 @@
     (function () {
       function firstLetter(s) { s = (s || '').trim(); return s ? s.charAt(0).toUpperCase() : '?'; }
 
+      function iconFail(img) {
+        var p = img.parentElement;
+        if (!p) return;
+        p.classList.add('card-icon--mono');
+        p.removeChild(img);
+        if (!p.textContent) { p.textContent = firstLetter(p.getAttribute('data-mono')); }
+      }
+
       function decorateMonos(root) {
         (root || document).querySelectorAll('.card-icon--mono').forEach(function (el) {
           if (!el.textContent) { el.textContent = firstLetter(el.getAttribute('data-mono')); }

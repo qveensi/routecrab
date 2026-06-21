@@ -7,7 +7,7 @@ use axum::{
 use rust_embed::RustEmbed;
 use serde::Deserialize;
 
-use crate::{config::Config, icons::icon_for, model::Route, store::Store};
+use crate::{config::Config, icons::icon_url, model::Route, store::Store};
 
 // ── Embedded static assets ────────────────────────────────────────────────
 
@@ -52,8 +52,8 @@ fn mime_type(path: &str) -> &'static str {
 
 // ── Index template ────────────────────────────────────────────────────────
 
-/// A route paired with its resolved icon SVG (if any).
-type RouteWithIcon = (Route, Option<&'static str>);
+/// A route paired with its resolved icon CDN URL.
+type RouteWithIcon = (Route, String);
 
 /// Groups of routes for template rendering: (group_name, routes_with_icons).
 type RouteGroups = Vec<(String, Vec<RouteWithIcon>)>;
@@ -112,8 +112,8 @@ pub fn build_groups(store: &Store, query: &str) -> RouteGroups {
                 || r.description.to_lowercase().contains(&q)
         })
         .map(|r| {
-            let svg = icon_for(&r.name, &r.icon);
-            (r, svg)
+            let url = icon_url(&r.name, &r.icon);
+            (r, url)
         })
         .collect();
     group_routes_with_icons(routes_with_icons)
@@ -145,18 +145,18 @@ pub async fn index(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-/// Partition a sorted (route, icon_svg) slice into `(group_name, items)` pairs.
+/// Partition a sorted (route, icon_url) slice into `(group_name, items)` pairs.
 /// The order of groups follows the first occurrence in the input slice.
 fn group_routes_with_icons(mut items: Vec<RouteWithIcon>) -> RouteGroups {
     let mut groups: RouteGroups = Vec::new();
-    for (route, icon_svg) in items.drain(..) {
+    for (route, icon_url) in items.drain(..) {
         if let Some(last) = groups.last_mut() {
             if last.0 == route.group {
-                last.1.push((route, icon_svg));
+                last.1.push((route, icon_url));
                 continue;
             }
         }
-        groups.push((route.group.clone(), vec![(route, icon_svg)]));
+        groups.push((route.group.clone(), vec![(route, icon_url)]));
     }
     groups
 }

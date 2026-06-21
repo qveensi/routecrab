@@ -32,7 +32,7 @@ axum-prometheus = "0.10"
 metrics = "0.24"
 askama = "0.16"
 tokio-stream = { version = "0.1", features = ["sync"] }
-rust-embed = { version = "8.11.0", features = ["interpolate-folder-path", "include-exclude"] }
+rust-embed = { version = "8.11.0", features = ["interpolate-folder-path"] }
 async-stream = "0.3"
 
 [dev-dependencies]

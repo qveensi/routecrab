@@ -1,173 +1,109 @@
-/// Embedded Simple Icons subset.
-///
-/// Icons are sourced from https://simpleicons.org (MIT license).
-/// See assets/icons/LICENSE for full attribution.
-use std::sync::OnceLock;
+/// dashboard-icons (homarr-labs) CDN — service brand icons, fetched client-side.
+const ICON_CDN_BASE: &str = "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg";
 
-use rust_embed::RustEmbed;
-
-#[derive(RustEmbed)]
-#[folder = "assets/icons/"]
-#[include = "*.svg"]
-struct Icons;
-
-// Lazily-built index: slug -> &'static str pointing at leaked SVG bytes.
-fn icon_index() -> &'static std::collections::HashMap<String, &'static str> {
-    static CACHE: OnceLock<std::collections::HashMap<String, &'static str>> = OnceLock::new();
-    CACHE.get_or_init(|| {
-        let mut map = std::collections::HashMap::new();
-        for file in Icons::iter() {
-            let name = file.as_ref();
-            if let Some(slug) = name.strip_suffix(".svg") {
-                if let Some(asset) = Icons::get(name) {
-                    // Leak once so we can hand out &'static str without per-call allocation.
-                    let s: &'static str = Box::leak(
-                        String::from_utf8_lossy(&asset.data)
-                            .into_owned()
-                            .into_boxed_str(),
-                    );
-                    map.insert(slug.to_owned(), s);
-                }
-            }
-        }
-        map
-    })
-}
-
-/// Slugify a display name to match Simple Icons conventions:
-/// lowercase, translate `.` → `dot` and `+` → `plus`,
-/// then drop every character that is not ASCII alphanumeric.
-fn slugify(name: &str) -> String {
-    name.to_lowercase()
-        .replace('.', "dot")
-        .replace('+', "plus")
-        .chars()
-        .filter(|c| c.is_ascii_alphanumeric())
-        .collect()
-}
-
-/// Map common service-name slugs to the canonical vendored Simple Icons slug.
-/// Each target MUST exist in `assets/icons/`.
-fn canonical_slug(slug: &str) -> &str {
-    match slug {
-        "argocd" => "argo",
-        "k8s" => "kubernetes",
-        "postgres" => "postgresql",
-        "kafka" => "apachekafka",
-        "traefik" => "traefikproxy",
-        "nats" => "natsdotio",
-        "vaultproject" => "vault",
-        "sonarqube" => "sonar",
-        // VictoriaMetrics suite (logs / vmui variants) share one brand icon.
-        "victorialogs" | "victorialogsvmui" | "victoriametricsvmui" => "victoriametrics",
-        other => other,
-    }
-}
-
-/// Return the embedded SVG for a service icon.
+/// Build the `<img src>` URL for a service icon (resolved by the browser).
 ///
 /// Resolution order:
-/// 1. `override_slug` if non-empty (lowercased for case-insensitive lookup).
-/// 2. `name` slugified (lowercase, `.` → `dot`, `+` → `plus`, non-alphanumeric stripped).
+/// 1. If `icon_override` (trimmed) starts with `http://` or `https://`, use it verbatim.
+/// 2. If `icon_override` is non-empty (after trim), use `icon_slug(icon_override)`.
+/// 3. Otherwise use `icon_slug(name)`.
 ///
-/// The resolved slug is then mapped through `canonical_slug` (e.g. `argocd` → `argo`).
-///
-/// Returns `None` when no matching icon is vendored.
-pub fn icon_for(name: &str, override_slug: &str) -> Option<&'static str> {
-    let slug = if override_slug.is_empty() {
-        slugify(name)
+/// Returns a CDN URL for a `.svg` file. The browser fetches it; on error the
+/// JS `iconFail` handler downgrades the card to a monogram.
+pub fn icon_url(name: &str, icon_override: &str) -> String {
+    let raw = if icon_override.trim().is_empty() {
+        name
     } else {
-        override_slug.to_lowercase()
-    };
-    icon_index().get(canonical_slug(&slug)).copied()
+        icon_override
+    }
+    .trim();
+
+    if raw.starts_with("http://") || raw.starts_with("https://") {
+        return raw.to_string();
+    }
+
+    format!("{}/{}.svg", ICON_CDN_BASE, icon_slug(raw))
+}
+
+/// dashboard-icons slug convention:
+/// - lowercase
+/// - spaces and underscores → `-`
+/// - keep only `[a-z0-9-]`
+/// - collapse consecutive `-` into one
+/// - trim leading/trailing `-`
+fn icon_slug(s: &str) -> String {
+    let lower = s.to_lowercase();
+    let replaced: String = lower
+        .chars()
+        .map(|c| if c == ' ' || c == '_' { '-' } else { c })
+        .collect();
+    let filtered: String = replaced
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || *c == '-')
+        .collect();
+    // collapse consecutive dashes
+    let mut result = String::with_capacity(filtered.len());
+    let mut last_dash = false;
+    for c in filtered.chars() {
+        if c == '-' {
+            if !last_dash {
+                result.push(c);
+            }
+            last_dash = true;
+        } else {
+            result.push(c);
+            last_dash = false;
+        }
+    }
+    // trim leading/trailing dashes
+    result.trim_matches('-').to_string()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    const CDN: &str = "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg";
+
     #[test]
-    fn known_icon_returns_svg() {
-        let svg = icon_for("grafana", "");
-        assert!(svg.is_some(), "grafana icon should be vendored");
-        assert!(
-            svg.unwrap().contains("<svg"),
-            "content should be an SVG element"
-        );
+    fn grafana_no_override() {
+        assert_eq!(icon_url("Grafana", ""), format!("{CDN}/grafana.svg"));
     }
 
     #[test]
-    fn unknown_icon_returns_none() {
-        assert_eq!(icon_for("definitely-not-a-real-icon", ""), None);
+    fn override_slug_wins() {
+        assert_eq!(icon_url("x", "argo-cd"), format!("{CDN}/argo-cd.svg"));
     }
 
     #[test]
-    fn alias_resolves_argocd_to_argo() {
-        // "argocd" slugifies to "argocd" but the vendored file is "argo.svg";
-        // the alias map must bridge it.
-        let svg = icon_for("argocd", "").expect("argocd should resolve via alias to argo");
-        assert!(svg.contains("<svg"));
+    fn full_url_override_passthrough() {
+        let url = "https://example.com/my-icon.png";
+        assert_eq!(icon_url("whatever", url), url);
     }
 
     #[test]
-    fn newly_vendored_and_victoria_variants_resolve() {
-        // Directly vendored brands.
-        for name in ["fusionauth", "metabase", "rustfs", "victoriametrics"] {
-            assert!(
-                icon_for(name, "").is_some(),
-                "{name} icon should be vendored"
-            );
-        }
-        // VictoriaMetrics suite variants alias to the victoriametrics icon.
-        for name in ["victorialogs-vmui", "victoriametrics-vmui", "victorialogs"] {
-            assert!(
-                icon_for(name, "").is_some(),
-                "{name} should alias to victoriametrics"
-            );
-        }
+    fn http_url_override_passthrough() {
+        let url = "http://internal/icon.svg";
+        assert_eq!(icon_url("whatever", url), url);
     }
 
     #[test]
-    fn override_slug_takes_precedence() {
-        // "My Grafana" would slugify to "mygrafana" which does not exist,
-        // but override_slug "grafana" should still resolve.
-        let svg = icon_for("My Grafana", "grafana");
-        assert!(svg.is_some(), "override slug should resolve");
-        assert!(svg.unwrap().contains("<svg"));
+    fn apache_kafka_slug() {
+        assert_eq!(icon_slug("Apache Kafka"), "apache-kafka");
     }
 
     #[test]
-    fn slugify_normalises_casing_and_spaces() {
-        // "Grafana" -> "grafana"
-        let svg = icon_for("Grafana", "");
-        assert!(svg.is_some(), "case-normalised lookup should work");
+    fn underscores_hyphenated() {
+        assert_eq!(icon_slug("my_service"), "my-service");
     }
 
     #[test]
-    fn slugify_strips_punctuation() {
-        // "Apache Kafka" -> "apachekafka"
-        let svg = icon_for("Apache Kafka", "");
-        assert!(
-            svg.is_some(),
-            "'Apache Kafka' should resolve to apachekafka"
-        );
+    fn consecutive_spaces_collapsed() {
+        assert_eq!(icon_slug("a  b"), "a-b");
     }
 
     #[test]
-    fn slugify_dot_to_dot_suffix() {
-        assert_eq!(slugify("nats.io"), "natsdotio");
-    }
-
-    #[test]
-    fn slugify_plus_to_plus_word() {
-        assert_eq!(slugify("c++"), "cplusplus");
-    }
-
-    #[test]
-    fn override_slug_is_case_insensitive() {
-        // Annotation value "Grafana" (mixed case) should resolve.
-        let svg = icon_for("My Service", "Grafana");
-        assert!(svg.is_some(), "uppercase override slug should resolve");
-        assert!(svg.unwrap().contains("<svg"));
+    fn empty_override_uses_name() {
+        assert_eq!(icon_url("Prometheus", ""), format!("{CDN}/prometheus.svg"));
     }
 }

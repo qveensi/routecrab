@@ -198,8 +198,8 @@ mod tests {
             "must contain the route card id"
         );
         assert!(
-            fragment.contains("<svg"),
-            "grafana icon must resolve to inline SVG"
+            fragment.contains("card-img"),
+            "grafana card must contain a CDN icon img element"
         );
     }
 }
