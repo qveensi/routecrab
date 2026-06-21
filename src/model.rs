@@ -47,6 +47,13 @@ impl fmt::Display for HealthStatus {
     }
 }
 
+/// Accept only http(s) URLs — keeps `javascript:`/`data:` schemes out of the
+/// rendered card href (the whole card is a clickable link).
+fn is_http_url(v: &str) -> bool {
+    let v = v.trim().to_ascii_lowercase();
+    v.starts_with("http://") || v.starts_with("https://")
+}
+
 impl Route {
     #[allow(dead_code)]
     pub fn display_title(&self) -> &str {
@@ -66,7 +73,9 @@ impl Route {
                     "description" => self.description = value.clone(),
                     "group" => self.group = value.clone(),
                     "icon" => self.icon = value.clone(),
-                    "url" => self.url = value.clone(),
+                    // Only accept http(s) so a malicious annotation can't inject a
+                    // `javascript:`/`data:` scheme into the rendered card href.
+                    "url" if is_http_url(value) => self.url = value.clone(),
                     "health-url" => self.health_url = value.clone(),
                     "health-path" => self.health_path = value.clone(),
                     "order" => {
@@ -95,6 +104,23 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(r.display_title(), "auth-server");
+    }
+
+    #[test]
+    fn url_annotation_rejects_non_http_scheme() {
+        let mut r = Route::default();
+        let mut a = std::collections::BTreeMap::new();
+        a.insert("routecrab.io/url".into(), "javascript:alert(1)".into());
+        r.apply_annotations(&a);
+        assert_eq!(r.url, "", "javascript: url must be rejected");
+
+        let mut a2 = std::collections::BTreeMap::new();
+        a2.insert("routecrab.io/url".into(), "https://app.example.com/".into());
+        r.apply_annotations(&a2);
+        assert_eq!(
+            r.url, "https://app.example.com/",
+            "https url must be accepted"
+        );
     }
 
     #[test]
