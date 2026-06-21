@@ -537,12 +537,13 @@ a { color: var(--accent); text-decoration: none; }
    FOOTER
    =========================================================================== */
 .footer {
-  /* Full-width like the header (edge-to-edge, padded), not the centered board —
-     so the GitHub link and version sit at the viewport edges at any width. */
+  /* Full-width bar (border spans the viewport, like the header) but the content
+     is a compact centered group — avoids the huge gap a 2-item space-between
+     leaves on wide screens. */
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  justify-content: center;
+  gap: .7rem;
   padding: .9rem 1.25rem;
   border-top: 1px solid var(--border);
   color: var(--text-faint);
