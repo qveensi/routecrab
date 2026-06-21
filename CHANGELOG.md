@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/qveensi/routecrab/compare/v0.3.5...v0.4.0) - 2026-06-21
+
+### Other
+
+- repo polish — drop stale dead_code allows + resync_interval, test gaps, hardening, build-year, community files
+
 ## [0.3.5](https://github.com/qveensi/routecrab/compare/v0.3.4...v0.3.5) - 2026-06-21
 
 ### Other
