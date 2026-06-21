@@ -22,7 +22,21 @@ pub fn icon_url(name: &str, icon_override: &str) -> String {
         return raw.to_string();
     }
 
-    format!("{}/{}.svg", ICON_CDN_BASE, icon_slug(raw))
+    format!("{}/{}.svg", ICON_CDN_BASE, cdn_alias(&icon_slug(raw)))
+}
+
+/// Bridge common service-name slugs to the actual dashboard-icons slug
+/// (which uses hyphenated names). Unmatched slugs pass through and, if the CDN
+/// 404s, the card falls back to a monogram.
+fn cdn_alias(slug: &str) -> &str {
+    match slug {
+        "argocd" => "argo-cd",
+        // VictoriaMetrics suite (logs / vmui variants) share one brand icon.
+        "victorialogs" | "victorialogs-vmui" | "victoriametrics-vmui" => "victoriametrics",
+        "k8s" => "kubernetes",
+        "postgres" => "postgresql",
+        other => other,
+    }
 }
 
 /// dashboard-icons slug convention:
@@ -79,6 +93,19 @@ mod tests {
     fn full_url_override_passthrough() {
         let url = "https://example.com/my-icon.png";
         assert_eq!(icon_url("whatever", url), url);
+    }
+
+    #[test]
+    fn cdn_aliases_bridge_slug_mismatches() {
+        assert_eq!(icon_url("argocd", ""), format!("{CDN}/argo-cd.svg"));
+        assert_eq!(
+            icon_url("victorialogs-vmui", ""),
+            format!("{CDN}/victoriametrics.svg")
+        );
+        assert_eq!(
+            icon_url("victoriametrics-vmui", ""),
+            format!("{CDN}/victoriametrics.svg")
+        );
     }
 
     #[test]
