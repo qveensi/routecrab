@@ -3,6 +3,50 @@ entries:
   routecrab:
   - annotations:
       artifacthub.io/category: monitoring-logging
+      artifacthub.io/changes: '- cosign v3 sign-blob uses --bundle (binaries failed
+        to sign)'
+      artifacthub.io/images: |
+        - name: routecrab
+          image: ghcr.io/qveensi/routecrab:latest
+          platforms:
+            - linux/amd64
+            - linux/arm64
+      artifacthub.io/license: MIT
+      artifacthub.io/links: |
+        - name: source
+          url: https://github.com/qveensi/routecrab
+        - name: support
+          url: https://github.com/qveensi/routecrab/issues
+      artifacthub.io/maintainers: |
+        - name: Yevhenii Huzii
+          email: yevhenii.huzii@gmail.com
+      artifacthub.io/screenshots: |
+        - title: Dashboard (dark)
+          url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/hero-dark.png
+        - title: Dashboard (light)
+          url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/hero-light.png
+        - title: List view
+          url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/list-view.png
+        - title: Search
+          url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/search.png
+    apiVersion: v2
+    appVersion: 0.4.8
+    created: "2026-06-21T13:28:16.519616946Z"
+    description: 'routecrab watches Gateway API HTTPRoute/Gateway resources cluster-wide
+      and exposes a live JSON inventory with health classification. '
+    digest: 983c0303f229cc09f595f2b749123e8d18f11871eb61d632c6a2f81d2ce154e3
+    home: https://github.com/qveensi/routecrab
+    icon: https://raw.githubusercontent.com/qveensi/routecrab/main/assets/logo.svg
+    kubeVersion: '>=1.25.0-0'
+    name: routecrab
+    sources:
+    - https://github.com/qveensi/routecrab
+    type: application
+    urls:
+    - https://qveensi.github.io/routecrab/routecrab-0.4.8.tgz
+    version: 0.4.8
+  - annotations:
+      artifacthub.io/category: monitoring-logging
       artifacthub.io/changes: |-
         - cargo-fuzz target for annotation/URL parsing
         - Scorecard hardening — signed release binaries, perms, pins, PAT
@@ -35,7 +79,7 @@ entries:
           url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/search.png
     apiVersion: v2
     appVersion: 0.4.7
-    created: "2026-06-21T13:15:39.560295933Z"
+    created: "2026-06-21T13:28:16.518278651Z"
     description: 'routecrab watches Gateway API HTTPRoute/Gateway resources cluster-wide
       and exposes a live JSON inventory with health classification. '
     digest: 2e3ecc7e45c7b9b3322a6553db9402bc12984232ae3f45c134aa06d632b18542
@@ -84,7 +128,7 @@ entries:
           url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/search.png
     apiVersion: v2
     appVersion: 0.4.6
-    created: "2026-06-21T13:15:39.558489303Z"
+    created: "2026-06-21T13:28:16.51695907Z"
     description: 'routecrab watches Gateway API HTTPRoute/Gateway resources cluster-wide
       and exposes a live JSON inventory with health classification. '
     digest: 6d826caec026db14da0e58f0e635d87914f1ebc640107a12fe590c1c3ddeb5b9
@@ -131,7 +175,7 @@ entries:
           url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/search.png
     apiVersion: v2
     appVersion: 0.4.5
-    created: "2026-06-21T13:15:39.55762255Z"
+    created: "2026-06-21T13:28:16.515670127Z"
     description: 'routecrab watches Gateway API HTTPRoute/Gateway resources cluster-wide
       and exposes a live JSON inventory with health classification. '
     digest: 8c6f2bd5b49247d9b1309b0c9cc848c9c56b8fc50dae52fd05fd514f3f1a90cd
@@ -176,7 +220,7 @@ entries:
           url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/search.png
     apiVersion: v2
     appVersion: 0.4.4
-    created: "2026-06-21T13:15:39.556763291Z"
+    created: "2026-06-21T13:28:16.514379611Z"
     description: 'routecrab watches Gateway API HTTPRoute/Gateway resources cluster-wide
       and exposes a live JSON inventory with health classification. '
     digest: fa1d895a739d12dabd52943f9f4e5e1f4eb97d68cafd68400d704b78d3ae0b7b
@@ -190,4 +234,4 @@ entries:
     urls:
     - https://qveensi.github.io/routecrab/routecrab-0.4.4.tgz
     version: 0.4.4
-generated: "2026-06-21T13:15:39.555942185Z"
+generated: "2026-06-21T13:28:16.512942098Z"
