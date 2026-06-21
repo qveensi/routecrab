@@ -69,6 +69,7 @@
     },
     "livenessProbe": { "type": "object" },
     "readinessProbe": { "type": "object" },
+    "startupProbe": { "type": "object" },
     "nodeSelector": { "type": "object" },
     "tolerations": { "type": "array" },
     "affinity": { "type": "object" },
@@ -100,6 +101,25 @@
         "enabled": { "type": "boolean" },
         "minAvailable": { "type": ["integer", "string"] },
         "maxUnavailable": { "type": ["integer", "string"] }
+      },
+      "not": { "required": ["minAvailable", "maxUnavailable"] }
+    },
+    "autoscaling": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "minReplicas": { "type": "integer", "minimum": 1 },
+        "maxReplicas": { "type": "integer", "minimum": 1 },
+        "targetCPUUtilizationPercentage": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "targetMemoryUtilizationPercentage": { "type": "integer", "minimum": 1, "maximum": 100 }
+      }
+    },
+    "networkPolicy": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "ingress": { "type": "array" },
+        "egress": { "type": "array" }
       }
     },
     "httpRoute": {
@@ -121,5 +141,6 @@
         "tls": { "type": "array" }
       }
     }
-  }
+  },
+  "additionalProperties": false
 }

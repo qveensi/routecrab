@@ -1,0 +1,33 @@
+routecrab {{ .Chart.AppVersion }} installed as "{{ include "routecrab.fullname" . }}" in namespace {{ .Release.Namespace }}.
+
+{{- if .Values.ingress.enabled }}
+
+Board (Ingress):
+{{- range $h := .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $h.host }}
+{{- end }}
+{{- else if .Values.httpRoute.enabled }}
+
+Board (Gateway API HTTPRoute):
+{{- range $h := .Values.httpRoute.hostnames }}
+  http://{{ $h }}
+{{- end }}
+{{- else }}
+
+The board is a {{ .Values.service.type }} Service on port {{ .Values.service.port }}.
+Reach it locally with:
+
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "routecrab.fullname" . }} 8080:{{ .Values.service.port }}
+
+then open http://localhost:8080
+{{- end }}
+
+Prometheus metrics: /metrics on port {{ .Values.metrics.port }}.
+{{- if or .Values.serviceMonitor.enabled .Values.podMonitor.enabled }}
+A {{ if .Values.serviceMonitor.enabled }}ServiceMonitor{{ else }}PodMonitor{{ end }} was created for prometheus-operator.
+{{- else }}
+Enable serviceMonitor.enabled or podMonitor.enabled for prometheus-operator scraping.
+{{- end }}
+
+Verify the release:
+  helm test {{ .Release.Name }} -n {{ .Release.Namespace }}

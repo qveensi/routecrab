@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "routecrab.fullname" . }}-test-connection"
+  labels:
+    {{- include "routecrab.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  # busybox (not the distroless app image) — it ships wget for the probe.
+  containers:
+    - name: healthz
+      image: busybox:1.37
+      command: ["wget"]
+      args:
+        - "-q"
+        - "-O-"
+        - "http://{{ include "routecrab.fullname" . }}:{{ .Values.service.port }}/healthz"
