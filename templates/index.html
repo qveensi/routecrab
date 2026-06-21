@@ -121,8 +121,10 @@
         var p = img.parentElement;
         if (!p) return;
         p.classList.add('card-icon--mono');
-        p.removeChild(img);
-        if (!p.textContent) { p.textContent = firstLetter(p.getAttribute('data-mono')); }
+        // The textContent setter clears the <img> AND the whitespace text nodes
+        // around it, then writes the monogram letter. (A `!p.textContent` guard
+        // fails here because the span contains newline whitespace around the img.)
+        p.textContent = firstLetter(p.getAttribute('data-mono'));
       };
 
       function decorateMonos(root) {
