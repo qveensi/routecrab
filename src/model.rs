@@ -53,6 +53,17 @@ fn is_http_url(v: &str) -> bool {
     v.starts_with("http://") || v.starts_with("https://")
 }
 
+/// Parse a boolean annotation value tolerantly. Returns `None` for anything
+/// unrecognized so callers pick a safe default rather than silently treating a
+/// typo (e.g. `routecrab.io/health: "disbled"`) as a meaningful value.
+fn parse_bool(v: &str) -> Option<bool> {
+    match v.trim().to_ascii_lowercase().as_str() {
+        "true" | "1" | "yes" | "on" => Some(true),
+        "false" | "0" | "no" | "off" => Some(false),
+        _ => None,
+    }
+}
+
 impl Route {
     pub fn display_title(&self) -> &str {
         if self.title.is_empty() {
@@ -84,8 +95,11 @@ impl Route {
                             self.order = order_val;
                         }
                     }
-                    "hidden" => self.hidden = value == "true",
-                    "health" => self.monitor_disabled = value == "false",
+                    // Unrecognized → not hidden (safe default: keep it visible).
+                    "hidden" => self.hidden = parse_bool(value).unwrap_or(false),
+                    // health=false disables monitoring. Unrecognized → keep
+                    // monitoring on (safer than silently going dark on a typo).
+                    "health" => self.monitor_disabled = !parse_bool(value).unwrap_or(true),
                     _ => {}
                 }
             }
@@ -131,6 +145,35 @@ mod tests {
         a.insert("routecrab.io/health".into(), "false".into());
         r.apply_annotations(&a);
         assert!(r.monitor_disabled);
+    }
+
+    #[test]
+    fn bool_annotations_normalize_and_default_safely() {
+        // Case-insensitive truthy values hide the route.
+        for v in ["true", "TRUE", " yes ", "1", "on"] {
+            let mut r = Route::default();
+            let mut a = std::collections::BTreeMap::new();
+            a.insert("routecrab.io/hidden".into(), v.into());
+            r.apply_annotations(&a);
+            assert!(r.hidden, "{v:?} should hide");
+        }
+        // A typo must NOT disable monitoring (stays on) nor hide.
+        let mut r = Route::default();
+        let mut a = std::collections::BTreeMap::new();
+        a.insert("routecrab.io/health".into(), "disbled".into());
+        a.insert("routecrab.io/hidden".into(), "maybe".into());
+        r.apply_annotations(&a);
+        assert!(
+            !r.monitor_disabled,
+            "typo must not silently disable monitoring"
+        );
+        assert!(!r.hidden, "typo must not hide");
+        // health=off (synonym) disables monitoring.
+        let mut r2 = Route::default();
+        let mut a2 = std::collections::BTreeMap::new();
+        a2.insert("routecrab.io/health".into(), "off".into());
+        r2.apply_annotations(&a2);
+        assert!(r2.monitor_disabled);
     }
 
     #[test]
