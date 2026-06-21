@@ -4,7 +4,7 @@
 # cargo-zigbuild uses Zig as the C cross-linker, which produces portable musl
 # static binaries without the cmake/aws-lc pain.  ring (our TLS backend)
 # supports musl cleanly, so fully-static linking works here.
-FROM --platform=$BUILDPLATFORM ghcr.io/rust-cross/cargo-zigbuild:0.21.4 AS builder
+FROM --platform=$BUILDPLATFORM ghcr.io/rust-cross/cargo-zigbuild:0.21.4@sha256:dce4ea213244423439d97a2070031c6ea287fc32f01b0aaa38f8b4d46f52e68c AS builder
 
 WORKDIR /build
 
@@ -46,7 +46,7 @@ RUN touch src/main.rs src/lib.rs && \
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
 # distroless/static has no glibc — the binary must be fully statically linked.
-FROM gcr.io/distroless/static-debian12:nonroot
+FROM gcr.io/distroless/static-debian12:nonroot@sha256:d093aa3e30dbadd3efe1310db061a14da60299baff8450a17fe0ccc514a16639
 
 COPY --from=builder /routecrab /routecrab
 
