@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.7](https://github.com/qveensi/routecrab/compare/v0.4.6...v0.4.7) - 2026-06-21
+
+### Other
+
+- cargo-fuzz target for annotation/URL parsing ([#77](https://github.com/qveensi/routecrab/pull/77))
+- Scorecard hardening — signed release binaries, perms, pins, PAT ([#76](https://github.com/qveensi/routecrab/pull/76))
+- property/fuzz tests for annotation + URL parsing ([#74](https://github.com/qveensi/routecrab/pull/74))
+- document h1, focus-visible rings, aria-pressed filters, live status ([#73](https://github.com/qveensi/routecrab/pull/73))
+- OpenSSF Scorecard workflow + README badges + OpenAPI spec ([#72](https://github.com/qveensi/routecrab/pull/72))
+
 ## [0.4.6](https://github.com/qveensi/routecrab/compare/v0.4.5...v0.4.6) - 2026-06-21
 
 ### Fixed
