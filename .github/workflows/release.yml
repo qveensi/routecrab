@@ -10,6 +10,10 @@ on:
     branches: [main]
     tags: ["v*"]
 
+# Least privilege by default; jobs escalate only what they need.
+permissions:
+  contents: read
+
 # ---------------------------------------------------------------------------
 # release-plz: open/update a release PR, then tag + GitHub-release when merged
 # ---------------------------------------------------------------------------
@@ -366,6 +370,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
+      # Keyless cosign sign-blob of the release binaries.
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -387,14 +393,24 @@ jobs:
           BIN="routecrab-${VERSION}-linux-${{ matrix.arch }}"
           cp target/release/routecrab "${BIN}"
           sha256sum "${BIN}" > "${BIN}.sha256"
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Sign binary (keyless)
+        run: |
+          # Keyless sign-blob → .sig + .crt attached to the release so consumers
+          # (and OpenSSF Scorecard Signed-Releases) can verify provenance.
+          BIN="routecrab-${GITHUB_REF_NAME#v}-linux-${{ matrix.arch }}"
+          cosign sign-blob --yes \
+            --output-signature "${BIN}.sig" \
+            --output-certificate "${BIN}.crt" \
+            "${BIN}"
       - name: Attach to GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          BIN="routecrab-${GITHUB_REF_NAME#v}-linux-${{ matrix.arch }}"
           gh release upload "$GITHUB_REF_NAME" \
-            "routecrab-${VERSION}-linux-${{ matrix.arch }}" \
-            "routecrab-${VERSION}-linux-${{ matrix.arch }}.sha256" \
+            "${BIN}" "${BIN}.sha256" "${BIN}.sig" "${BIN}.crt" \
             --clobber
 
   # ---------------------------------------------------------------------------
