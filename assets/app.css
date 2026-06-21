@@ -77,6 +77,10 @@ body {
   background-image: var(--bg-grad);
   background-attachment: fixed;
   color: var(--text);
+  /* Sticky footer: column layout + growing main pins the footer to the
+     viewport bottom on short pages instead of floating up under the content. */
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
@@ -292,9 +296,12 @@ a { color: var(--accent); text-decoration: none; }
    BOARD
    =========================================================================== */
 .main {
+  width: 100%;
   max-width: 1640px;
   margin: 0 auto;
   padding: 1.5rem 1.25rem 4rem;
+  /* Grow to absorb slack height so the footer is pushed to the bottom. */
+  flex: 1 0 auto;
 }
 
 .group { margin-bottom: 1.9rem; }
@@ -545,6 +552,7 @@ a { color: var(--accent); text-decoration: none; }
   justify-content: center;
   gap: .7rem;
   padding: .9rem 1.25rem;
+  flex-shrink: 0;
   border-top: 1px solid var(--border);
   color: var(--text-faint);
   font-size: .76rem;
