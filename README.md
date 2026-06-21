@@ -1,5 +1,10 @@
 # routecrab
 
+[![CI](https://github.com/qveensi/routecrab/actions/workflows/ci.yml/badge.svg)](https://github.com/qveensi/routecrab/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/qveensi/routecrab?sort=semver)](https://github.com/qveensi/routecrab/releases)
+[![License: MIT](https://img.shields.io/github/license/qveensi/routecrab)](LICENSE)
+[![Image](https://img.shields.io/badge/ghcr.io-qveensi%2Froutecrab-2496ed?logo=docker&logoColor=white)](https://github.com/qveensi/routecrab/pkgs/container/routecrab)
+
 A Kubernetes-native dashboard that auto-discovers Gateway API `HTTPRoute` resources, health-checks them, and serves a real-time board with SSE live updates.
 
 Most route dashboards require static configuration. routecrab uses the Gateway API as its source of truth: any `HTTPRoute` in the cluster appears on the board automatically, labelled with health status, grouped by namespace or annotation, and filterable by name. It produces structured JSON logs and Prometheus metrics so it fits naturally into existing observability stacks.
@@ -24,12 +29,20 @@ Most route dashboards require static configuration. routecrab uses the Gateway A
 ### Helm (OCI chart)
 
 ```bash
-helm install routecrab oci://ghcr.io/qveensi/routecrab \
+helm install routecrab oci://ghcr.io/qveensi/helm/routecrab \
   --namespace routecrab --create-namespace
 kubectl port-forward -n routecrab svc/routecrab 8080:80
 ```
 
 Open [http://localhost:8080](http://localhost:8080).
+
+### Docker
+
+```bash
+docker run --rm -p 8080:8080 ghcr.io/qveensi/routecrab:latest
+```
+
+Multi-arch image (`linux/amd64`, `linux/arm64`), distroless, ~15 MB.
 
 ### Helm (local chart)
 
