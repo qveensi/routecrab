@@ -25,3 +25,6 @@ annotations:
   artifacthub.io/images: |
     - name: routecrab
       image: ghcr.io/qveensi/routecrab:latest
+      platforms:
+        - linux/amd64
+        - linux/arm64
