@@ -58,12 +58,17 @@ type RouteWithIcon = (Route, Option<&'static str>);
 /// Groups of routes for template rendering: (group_name, routes_with_icons).
 type RouteGroups = Vec<(String, Vec<RouteWithIcon>)>;
 
+const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
+const APP_YEAR: &str = "2026";
+
 #[derive(Template)]
 #[template(path = "index.html")]
 struct IndexTemplate<'a> {
     title: &'a str,
     query: &'a str,
     groups: RouteGroups,
+    version: &'static str,
+    year: &'static str,
 }
 
 #[derive(Template)]
@@ -132,6 +137,8 @@ pub async fn index(
         title: &state.title,
         query: params.q.trim(),
         groups,
+        version: APP_VERSION,
+        year: APP_YEAR,
     };
     tmpl.render()
         .map(Html)

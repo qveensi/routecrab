@@ -1,15 +1,31 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" data-view="grid">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title }}</title>
+  <!-- Inline favicon: brand-mark SVG as data URI (CSP/offline-safe) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234c8dff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='5' cy='6' r='2.4'/%3E%3Ccircle cx='19' cy='6' r='2.4'/%3E%3Ccircle cx='12' cy='18' r='2.4'/%3E%3Cpath d='M7 7.4 10.4 16M16.8 7.6 13.4 16M7.2 6h9.6'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/assets/app.css">
   <script>
-    // Apply stored theme before first paint to avoid flash. Dark is the default.
+    // Apply stored theme + view before first paint to avoid flash.
     (function () {
-      var t = localStorage.getItem('theme') || 'dark';
+      var stored = localStorage.getItem('theme');
+      var t = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', t);
+
+      var v = localStorage.getItem('view') || 'grid';
+      document.documentElement.setAttribute('data-view', v);
+
+      // Track OS theme changes only when user has not made an explicit choice.
+      if (!stored) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+          // Re-check: user may have toggled since page load.
+          if (!localStorage.getItem('theme')) {
+            document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+          }
+        });
+      }
     })();
   </script>
 </head>
@@ -57,6 +73,12 @@
           aria-label="Search routes"
         >
       </div>
+      <button class="view-toggle" onclick="toggleView()" aria-label="Toggle grid/list view">
+        <!-- grid icon: shown in list view to switch back to grid -->
+        <svg class="icon-view-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <!-- list icon: shown in grid view to switch to list -->
+        <svg class="icon-view-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      </button>
       <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle color theme">
         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"></path></svg>
@@ -68,6 +90,13 @@
     {% include "_board.html" %}
   </main>
 
+  <footer class="footer">
+    <a href="https://github.com/qveensi/routecrab" target="_blank" rel="noopener" aria-label="Source on GitHub">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+    </a>
+    <span class="footer-right">© {{ year }} · routecrab v{{ version }}</span>
+  </footer>
+
   <script src="/assets/htmx.min.js"></script>
   <script src="/assets/sse.js"></script>
   <script>
@@ -76,6 +105,13 @@
       var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       html.setAttribute('data-theme', next);
       localStorage.setItem('theme', next);
+    }
+
+    function toggleView() {
+      var html = document.documentElement;
+      var next = html.getAttribute('data-view') === 'grid' ? 'list' : 'grid';
+      html.setAttribute('data-view', next);
+      localStorage.setItem('view', next);
     }
 
     (function () {
