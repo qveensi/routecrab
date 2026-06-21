@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2](https://github.com/qveensi/routecrab/compare/v0.4.1...v0.4.2) - 2026-06-21
+
+### Fixed
+
+- *(image)* COPY build.rs into builder (ROUTECRAB_BUILD_YEAR env! broke image build)
+
 ## [0.4.1](https://github.com/qveensi/routecrab/compare/v0.4.0...v0.4.1) - 2026-06-21
 
 ### Other
