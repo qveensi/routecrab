@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.8](https://github.com/qveensi/routecrab/compare/v0.4.7...v0.4.8) - 2026-06-21
+
+### Fixed
+
+- *(release)* cosign v3 sign-blob uses --bundle (binaries failed to sign) ([#78](https://github.com/qveensi/routecrab/pull/78))
+
 ## [0.4.7](https://github.com/qveensi/routecrab/compare/v0.4.6...v0.4.7) - 2026-06-21
 
 ### Other
