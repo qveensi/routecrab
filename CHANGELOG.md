@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3](https://github.com/qveensi/routecrab/compare/v0.4.2...v0.4.3) - 2026-06-21
+
+### Fixed
+
+- *(web)* pin footer to viewport bottom on short pages ([#51](https://github.com/qveensi/routecrab/pull/51))
+
+### Other
+
+- *(chart)* add package logo for Artifact Hub
+- *(chart)* declare image platforms for Artifact Hub ([#54](https://github.com/qveensi/routecrab/pull/54))
+- keyless cosign signing for image and Helm chart ([#52](https://github.com/qveensi/routecrab/pull/52))
+- build image on PRs + add Helm values JSON schema ([#50](https://github.com/qveensi/routecrab/pull/50))
+
 ## [0.4.2](https://github.com/qveensi/routecrab/compare/v0.4.1...v0.4.2) - 2026-06-21
 
 ### Fixed
