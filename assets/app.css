@@ -537,12 +537,12 @@ a { color: var(--accent); text-decoration: none; }
    FOOTER
    =========================================================================== */
 .footer {
+  /* Full-width like the header (edge-to-edge, padded), not the centered board —
+     so the GitHub link and version sit at the viewport edges at any width. */
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: .7rem;
-  max-width: 1640px;
-  margin: 0 auto;
+  justify-content: space-between;
+  gap: 1rem;
   padding: .9rem 1.25rem;
   border-top: 1px solid var(--border);
   color: var(--text-faint);
