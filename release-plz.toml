@@ -1,7 +1,9 @@
 [workspace]
-# Keep git tags and GitHub releases enabled (they trigger image/chart publish).
-# Disable crates.io publish — routecrab is not (yet) published to the registry.
-publish = false
+# routecrab is an application, not a crates.io library. Determine versions from
+# git tags (not the registry) so release-plz can compute the next version + open
+# the version-bump PR (release-pr). Without this, the missing crates.io baseline
+# makes release-plz always report "up to date" and never bump.
+git_only = true
 
 [[package]]
 name = "routecrab"
