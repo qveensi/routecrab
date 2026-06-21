@@ -576,3 +576,30 @@ a { color: var(--accent); text-decoration: none; }
   }
   .card:hover { transform: none; }
 }
+
+/* -- Accessibility -------------------------------------------------------- */
+/* Visually hidden but available to screen readers (document h1, etc.). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Always show a keyboard focus ring on interactive elements. The search input
+   keeps its bespoke box-shadow ring (see .search-input:focus above). */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.search-input:focus-visible {
+  outline: none;
+}

@@ -30,6 +30,7 @@
   </script>
 </head>
 <body>
+  <h1 class="sr-only">{{ title }} — Gateway API route dashboard</h1>
   <header class="header">
     <a class="brand" href="/" aria-label="{{ title }}">
       <span class="brand-mark" aria-hidden="true">
@@ -41,16 +42,16 @@
         </svg>
       </span>
       <span class="brand-name">route<b>crab</b></span>
-      <span class="live" id="live" data-state="connecting" title="Live updates connection">
+      <span class="live" id="live" data-state="connecting" role="status" aria-label="Live updates connection" title="Live updates connection">
         <span class="live-dot" aria-hidden="true"></span><span class="live-label">live</span>
       </span>
     </a>
 
     <div class="summary" id="summary" aria-label="Cluster health summary">
-      <button type="button" class="stat ok"   data-zero="true" data-filter="healthy"   title="Filter: healthy" onclick="toggleFilter('healthy')"><span class="dot" aria-hidden="true"></span><b id="c-healthy">0</b><span class="stat-label">healthy</span></button>
-      <button type="button" class="stat warn" data-zero="true" data-filter="degraded"  title="Filter: degraded" onclick="toggleFilter('degraded')"><span class="dot" aria-hidden="true"></span><b id="c-degraded">0</b><span class="stat-label">degraded</span></button>
-      <button type="button" class="stat down" data-zero="true" data-filter="unhealthy" title="Filter: unhealthy" onclick="toggleFilter('unhealthy')"><span class="dot" aria-hidden="true"></span><b id="c-unhealthy">0</b><span class="stat-label">unhealthy</span></button>
-      <button type="button" class="stat idle" data-zero="true" data-filter="unknown"   title="Filter: unknown" onclick="toggleFilter('unknown')"><span class="dot" aria-hidden="true"></span><b id="c-unknown">0</b><span class="stat-label">unknown</span></button>
+      <button type="button" class="stat ok"   data-zero="true" aria-pressed="false" data-filter="healthy"   title="Filter: healthy" onclick="toggleFilter('healthy')"><span class="dot" aria-hidden="true"></span><b id="c-healthy">0</b><span class="stat-label">healthy</span></button>
+      <button type="button" class="stat warn" data-zero="true" aria-pressed="false" data-filter="degraded"  title="Filter: degraded" onclick="toggleFilter('degraded')"><span class="dot" aria-hidden="true"></span><b id="c-degraded">0</b><span class="stat-label">degraded</span></button>
+      <button type="button" class="stat down" data-zero="true" aria-pressed="false" data-filter="unhealthy" title="Filter: unhealthy" onclick="toggleFilter('unhealthy')"><span class="dot" aria-hidden="true"></span><b id="c-unhealthy">0</b><span class="stat-label">unhealthy</span></button>
+      <button type="button" class="stat idle" data-zero="true" aria-pressed="false" data-filter="unknown"   title="Filter: unknown" onclick="toggleFilter('unknown')"><span class="dot" aria-hidden="true"></span><b id="c-unknown">0</b><span class="stat-label">unknown</span></button>
     </div>
 
     <div class="header-tools">
@@ -187,7 +188,9 @@
       };
       function applyFilter() {
         document.querySelectorAll('.stat[data-filter]').forEach(function (s) {
-          s.classList.toggle('stat--active', s.getAttribute('data-filter') === activeFilter);
+          var on = s.getAttribute('data-filter') === activeFilter;
+          s.classList.toggle('stat--active', on);
+          s.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
         var board = document.getElementById('board');
         if (!board) return;
