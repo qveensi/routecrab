@@ -4,7 +4,7 @@
 # cargo-zigbuild uses Zig as the C cross-linker, which produces portable musl
 # static binaries without the cmake/aws-lc pain.  ring (our TLS backend)
 # supports musl cleanly, so fully-static linking works here.
-FROM --platform=$BUILDPLATFORM ghcr.io/rust-cross/cargo-zigbuild:0.23.0@sha256:b8364c2c60cdcc9b95c402d17654bff517410926a35678bd89dd924b8158d6ae AS builder
+FROM --platform=$BUILDPLATFORM ghcr.io/rust-cross/cargo-zigbuild:0.23.3@sha256:76ed3823d8cd9d8b409b10f9c4cda292b0c8699175ea4c0a2d541775c8184d2b AS builder
 
 WORKDIR /build
 
