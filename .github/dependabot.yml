@@ -22,6 +22,15 @@ updates:
       interval: weekly
     commit-message:
       prefix: "ci(deps)"
+    groups:
+      # init/autobuild/analyze/upload-sarif are separate Dependabot
+      # dependencies but one product: CodeQL aborts when the version that
+      # wrote the config differs from the one running ("Loaded a
+      # configuration file for version X, but running version Y"). Ungrouped,
+      # Dependabot bumps them one at a time and every such PR fails.
+      codeql-action:
+        patterns:
+          - "github/codeql-action*"
 
   # Dockerfile base images (pinned by digest; Dependabot bumps the digest)
   - package-ecosystem: docker
