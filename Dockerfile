@@ -46,7 +46,7 @@ RUN touch src/main.rs src/lib.rs && \
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
 # distroless/static has no glibc — the binary must be fully statically linked.
-FROM gcr.io/distroless/static-debian12:nonroot@sha256:b7bb25d9f7c31d2bdd1982feb4dafcaf137703c7075dbe2febb41c24212b946f
+FROM gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab
 
 COPY --from=builder /routecrab /routecrab
 
