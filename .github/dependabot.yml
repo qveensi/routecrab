@@ -14,6 +14,20 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # kube 4 requires k8s-openapi 0.28, but gateway-api (0.21.0, latest) still
+      # pins kube 3.1.0 / k8s-openapi 0.27. Bumping either one alone puts two
+      # incompatible trees in the lockfile: the transitive k8s-openapi has no
+      # v1_* feature enabled, so its build script aborts, and HTTPRoute would
+      # still carry a kube-core 3.x Resource impl that kube 4 does not accept.
+      # The three move together or not at all — drop these entries once
+      # kube-rs/gateway-api-rs ships a kube-4 release (upstream PRs #238, #237).
+      - dependency-name: "kube"
+        update-types: ["version-update:semver-major"]
+      # k8s-openapi is pre-1.0, so 0.27 -> 0.28 is the breaking step Dependabot
+      # classifies as minor. Patches still come through.
+      - dependency-name: "k8s-openapi"
+        update-types: ["version-update:semver-minor"]
 
   # GitHub Actions (pinned by SHA; Dependabot bumps the SHA + version comment)
   - package-ecosystem: github-actions
