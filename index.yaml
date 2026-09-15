@@ -1,0 +1,60 @@
+apiVersion: v1
+entries:
+  routecrab:
+  - annotations:
+      artifacthub.io/category: monitoring-logging
+      artifacthub.io/changes: |-
+        - bump crossbeam-epoch and rustls for RUSTSEC-2026-0204 / RUSTSEC-2026-0285
+        - refresh Cargo.lock to latest compatible versions
+        - refresh all GitHub Actions pins to current releases
+        - stop Dependabot proposing kube 4 until gateway-api catches up
+        - bump distroless/static-debian12 from `b7bb25d` to `afa5c87`
+        - bump azure/setup-helm from 5.0.0 to 5.0.1
+        - move codeql-action pins in lockstep, group them in Dependabot
+        - bump rust-cross/cargo-zigbuild from 0.23.0 to 0.23.4
+        - bump distroless/static-debian12 from `d093aa3` to `b7bb25d`
+        - bump docker/metadata-action from 6.1.0 to 6.2.0
+        - bump docker/setup-buildx-action from 4.1.0 to 4.2.0
+        - bump docker/build-push-action from 7.2.0 to 7.3.0
+        - bump the patch-minor group across 1 directory with 11 updates
+      artifacthub.io/images: |
+        - name: routecrab
+          image: ghcr.io/qveensi/routecrab:latest
+          platforms:
+            - linux/amd64
+            - linux/arm64
+      artifacthub.io/license: MIT
+      artifacthub.io/links: |
+        - name: source
+          url: https://github.com/qveensi/routecrab
+        - name: support
+          url: https://github.com/qveensi/routecrab/issues
+      artifacthub.io/maintainers: |
+        - name: Yevhenii Huzii
+          email: yevhenii.huzii@gmail.com
+      artifacthub.io/screenshots: |
+        - title: Dashboard (dark)
+          url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/hero-dark.png
+        - title: Dashboard (light)
+          url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/hero-light.png
+        - title: List view
+          url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/list-view.png
+        - title: Search
+          url: https://raw.githubusercontent.com/qveensi/routecrab/main/docs/screenshots/search.png
+    apiVersion: v2
+    appVersion: 0.4.9
+    created: "2026-09-15T11:39:08.939371581Z"
+    description: 'routecrab watches Gateway API HTTPRoute/Gateway resources cluster-wide
+      and exposes a live JSON inventory with health classification. '
+    digest: cc2cda9118f870cf503b64ce835f078744fa9e2a801bb8ab820340205baf2d35
+    home: https://github.com/qveensi/routecrab
+    icon: https://raw.githubusercontent.com/qveensi/routecrab/main/assets/logo.svg
+    kubeVersion: '>=1.25.0-0'
+    name: routecrab
+    sources:
+    - https://github.com/qveensi/routecrab
+    type: application
+    urls:
+    - https://qveensi.github.io/routecrab/routecrab-0.4.9.tgz
+    version: 0.4.9
+generated: "2026-09-15T11:39:08.938563829Z"
