@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.9](https://github.com/qveensi/routecrab/compare/v0.4.8...v0.4.9) - 2026-09-15
 
+### Fixed
+
+- *(deps)* bump crossbeam-epoch and rustls for RUSTSEC-2026-0204 / RUSTSEC-2026-0285
+
 ### Other
 
 - *(deps)* refresh Cargo.lock to latest compatible versions
@@ -22,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - *(deps)* bump docker/metadata-action from 6.1.0 to 6.2.0
 - *(deps)* bump docker/setup-buildx-action from 4.1.0 to 4.2.0
 - *(deps)* bump docker/build-push-action from 7.2.0 to 7.3.0
+- *(deps)* bump the patch-minor group across 1 directory with 11 updates
 
 ## [0.4.8](https://github.com/qveensi/routecrab/compare/v0.4.7...v0.4.8) - 2026-06-21
 
